@@ -34,5 +34,6 @@ public class MainActivity extends AppCompatActivity {
         txtFname.setText(fstNameTxt);
         txtLname.setText(lstNameTxt);
         txtEmail.setText(emailTxt);
+        // 20221011
     }
 }
