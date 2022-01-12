@@ -17,11 +17,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onClkBtn(View view){
-        TextView txtHello = findViewById(R.id.txtMessage);
+        TextView txtFname = findViewById(R.id.txtFname);
+        TextView txtLname = findViewById(R.id.txtLname);
+        TextView txtEmail = findViewById(R.id.txtEmail);
 
-        EditText edtTxtName = findViewById(R.id.edtTxtName);
-        String nameTxt = edtTxtName.getText().toString();
 
-        txtHello.setText("Hello " + nameTxt);
+        EditText edtTxtFstName = findViewById(R.id.edtTxtFstName);
+        String fstNameTxt = edtTxtFstName.getText().toString();
+
+        EditText edtTxtLstName = findViewById(R.id.edtTxtLstName);
+        String lstNameTxt = edtTxtLstName.getText().toString();
+
+        EditText edtTxtEmail = findViewById(R.id.edtTxtEmail);
+        String emailTxt = edtTxtEmail.getText().toString();
+
+        txtFname.setText(fstNameTxt);
+        txtLname.setText(lstNameTxt);
+        txtEmail.setText(emailTxt);
     }
 }
