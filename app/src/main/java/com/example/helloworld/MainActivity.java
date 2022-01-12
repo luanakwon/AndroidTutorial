@@ -34,6 +34,6 @@ public class MainActivity extends AppCompatActivity {
         txtFname.setText(fstNameTxt);
         txtLname.setText(lstNameTxt);
         txtEmail.setText(emailTxt);
-        // android studio commit test 2
+        // terminal commit test 2
     }
 }
