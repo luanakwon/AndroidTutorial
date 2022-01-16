@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="img_doge">
+        https://i.kym-cdn.com/photos/images/newsfeed/000/581/296/c09.jpg
+    </string>
+    <string name="img_babyShark">
+        https://cdn.shoplightspeed.com/shops/626272/files/18390720/1652x2313x2/unique-industries-inc-baby-shark-invitations-8ct.jpg
+    </string>
+    <string name="img_beach">
+        https://hips.hearstapps.com/hmg-prod.s3.amazonaws.com/images/beach-quotes-1559667853.jpg
+    </string>
+    <string name="img_firework">
+        https://cdn.britannica.com/82/203482-050-E2ABDA79/People-fireworks.jpg
+    </string>
+    <string name="img_burger">
+        https://static01.nyt.com/images/2021/05/17/dining/kc-korean-bulgogi-burger/kc-korean-bulgogi-burger-mediumSquareAt3X.jpg
+    </string>
+</resources>
