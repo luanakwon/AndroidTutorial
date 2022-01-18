@@ -3,4 +3,5 @@
     <string name="preview_area">Preview area</string>
     <string name="capture">Capture</string>
     <string name="card_guide">Card position Guide</string>
+    <string name="flip_button">Flip button</string>
 </resources>

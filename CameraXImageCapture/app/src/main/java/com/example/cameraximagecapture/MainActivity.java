@@ -10,12 +10,15 @@ import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleOwner;
 
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Size;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -38,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
     private PreviewView previewView;
     private ImageView captureImage;
     private ImageView cardGuideView;
+    private ImageView flipImage;
+    private boolean rightMode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +53,26 @@ public class MainActivity extends AppCompatActivity {
         captureImage = findViewById(R.id.captureImg);
         cardGuideView = findViewById(R.id.cardGuideView);
         cardGuideView.setImageResource(R.mipmap.card_guide_bgra);
+        flipImage = findViewById(R.id.flipImg);
+        rightMode = true;
+
+        flipImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ConstraintLayout parentLayout = findViewById(R.id.parentConstraintLayout);
+                ConstraintSet constraintSet = new ConstraintSet();
+                constraintSet.clone(parentLayout);
+                if (rightMode){
+                    constraintSet.setHorizontalBias(R.id.linearLayout,0);
+                    cardGuideView.setImageResource(R.mipmap.card_guide_flip_bgra);
+                } else {
+                    constraintSet.setHorizontalBias(R.id.linearLayout,1);
+                    cardGuideView.setImageResource(R.mipmap.card_guide_bgra);
+                }
+                constraintSet.applyTo(parentLayout);
+                rightMode = !rightMode;
+            }
+        });
 
         if (allPermissionsGranted()){
             startCamera();
@@ -132,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
 
         final ImageCapture imageCapture = builder
                 .setTargetRotation(this.getWindowManager().getDefaultDisplay().getRotation())
+                .setTargetResolution(new Size(1920,1080))
                 .build();
         preview.setSurfaceProvider(previewView.createSurfaceProvider());
 
@@ -147,8 +173,14 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 SimpleDateFormat simpleDateFormat =
                         new SimpleDateFormat("yyyyMMddHHmmss", Locale.US);
-                File file = new File(getBatchDirectoryName(),
-                        simpleDateFormat.format(new Date())+".jpg");
+                File file;
+                if (rightMode){
+                    file = new File(getBatchDirectoryName(),
+                            simpleDateFormat.format(new Date())+"_L.jpg");
+                } else {
+                    file = new File(getBatchDirectoryName(),
+                            simpleDateFormat.format(new Date())+"_R.jpg");
+                }
                 ImageCapture.OutputFileOptions outputFileOptions =
                         new ImageCapture.OutputFileOptions.Builder(file).build();
                 imageCapture.takePicture(outputFileOptions, executor,
@@ -156,11 +188,22 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
                                 // Had some fatal error with toast message.
-                                //Toast.makeText(MainActivity.this, "Image saved Successfully", Toast.LENGTH_SHORT).show();
-                                System.out.println("Image saved Successfully");
+                                // apparently, you CANNOT show toast in non-ui thread
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(MainActivity.this, "Image saved Successfully", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                             }
                             @Override
                             public void onError(@NonNull ImageCaptureException exception) {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(MainActivity.this, "Failed to save image", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
                                 exception.printStackTrace();
                             }
                         });
