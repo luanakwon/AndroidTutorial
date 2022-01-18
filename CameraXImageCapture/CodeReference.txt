@@ -1,0 +1,10 @@
+Base code of CameraX imageCapture:
+https://akhilbattula.medium.com/android-camerax-java-example-aeee884f9102
+
+Environment.getExternalStorageDirectory problem fixed:
+https://tipsfordev.com/camerax-saving-images-to-file-filenotfoundexception-permission-denied
+https://developer.android.com/reference/android/content/Context#getExternalFilesDir(java.lang.String)
+https://stackoverflow.com/questions/63978064/cannot-save-captured-image-to-external-media-directory-using-camerax/64003895#64003895
+
+Problem with the Toast message(didn't fixed it, just avoided it)
+https://stackoverflow.com/questions/47536005/cant-toast-on-a-thread-that-has-not-called-looper-prepare/47536058
