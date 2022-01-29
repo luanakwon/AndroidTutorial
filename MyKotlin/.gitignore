@@ -13,6 +13,4 @@
 .externalNativeBuild
 .cxx
 local.properties
-/OpenCVinAndroid/emptytemp/
-/MyKotlin/opencv/
-/RingGauge/sdk
+/opencv/
