@@ -4,11 +4,8 @@ import org.jetbrains.kotlinx.multik.api.*
 import org.jetbrains.kotlinx.multik.api.linalg.dot
 import org.jetbrains.kotlinx.multik.ndarray.data.*
 import org.jetbrains.kotlinx.multik.ndarray.operations.*
-import org.opencv.core.CvType
-import org.opencv.core.Mat
+import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
-import java.nio.ByteBuffer
-import kotlin.reflect.typeOf
 
 class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) {
 
@@ -67,9 +64,9 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
     fun getCardGuideArea(): Float{
         return area
     }
-    fun linear_regression2(weighted_img:D2Array<Float>, threshold:Float): IntArray{
-        val height = weighted_img.shape[0]
-        val width = weighted_img.shape[1]
+    fun linear_regression2(weighted_img:Mat): Pair<Int,Int>{
+        val height = weighted_img.size().height.toInt()
+        val width = weighted_img.size().width.toInt()
 
         val x = mk.arange<Float>(width)
         val y = mk.arange<Float>(height)
@@ -87,19 +84,79 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
             mk.ones(1,height)
         ).reshape(1,height*height)
 
-        val sq_d = 1f / mk.linalg.pow(
+        val mk_sq_d = 1f / mk.linalg.pow(
                 mk.linalg.dot(xv.reshape(width*height,1),(rb-lb))/(width.toFloat())
                 + mk.linalg.dot(mk.ones(height*width, 1),lb)
                 - mk.linalg.dot(
                     yv.reshape(height*width,1),mk.ones(1,height*height))
                 ,2)
+        val sq_d = Mat(width*height,height*height,weighted_img.type())
+        sq_d.put(0,0,mk_sq_d.toFloatArray())
 
-        val scores = mk.linalg.dot(weighted_img.reshape(1,height*width), sq_d)
-        val idx = mk.math.argMax(scores)
-        return if(scores[0,idx] < 0.8*width*0.3){
-            intArrayOf(0,0)
+        val scores = Mat()
+        Core.gemm(weighted_img.reshape(1,height*width),sq_d,0.0,null,0.0,scores)
+
+        val mmlr = Core.minMaxLoc(scores)
+        return if(mmlr.maxVal < 0.8*width*0.3){
+            Pair(0,0)
         } else {
-            intArrayOf(lb[0,idx].toInt(),rb[0,idx].toInt())
+            Pair(lb[0,mmlr.maxLoc.x.toInt()].toInt(),rb[0,mmlr.maxLoc.x.toInt()].toInt())
+        }
+//        val scores = mk.linalg.dot(weighted_img.reshape(1,height*width), sq_d)
+//        val idx = mk.math.argMax(scores)
+//        return if(scores[0,idx] < 0.8*width*0.3){
+//            intArrayOf(0,0)
+//        } else {
+//            intArrayOf(lb[0,idx].toInt(),rb[0,idx].toInt())
+//        }
+    }
+    fun getPossibleEdge(dst:Mat): Pair<ArrayList<Mat>,IntArray>{
+        val ld = (long_d*(p_w/(p_w+1))).toInt()
+        val ld2 = long_d-ld
+        val sd = (short_d*(p_w/(p_w+1))).toInt()
+        val sd2 = short_d - sd
+
+        val possible_edges = arrayListOf<Mat>()
+        possible_edges.add(dst.submat(0,sd,ld,ld2))
+        possible_edges.add(dst.submat(sd2,short_d,ld,ld2))
+        val peLeft = Mat()
+        Core.rotate(dst.submat(sd,sd2,0,ld)
+            ,peLeft,Core.ROTATE_90_CLOCKWISE)
+        possible_edges.add(peLeft)
+        val peRight = Mat()
+        Core.rotate(dst.submat(sd,sd2,ld2,long_d)
+            ,peRight,Core.ROTATE_90_CLOCKWISE)
+        possible_edges.add(peRight)
+
+        return Pair(possible_edges, intArrayOf(ld,ld2,sd,sd2))
+    }
+    fun run(grimg: Mat){
+        // orientation: landscape
+        val dst = Mat()
+        Imgproc.warpPerspective(
+            grimg, dst, M_in2out, Size(long_d.toDouble(),short_d.toDouble()), Imgproc.INTER_LINEAR
+        )
+        println("145 231")
+        val pe_pair = getPossibleEdge(dst)
+        val possible_edges = pe_pair.first
+        val sup_v = pe_pair.second
+
+        val pt8 = mk.zeros<Int>(4,4)
+        possible_edges.forEachIndexed{i, _pedge ->
+            val pedge = Mat()
+            Core.normalize(_pedge,pedge,0.0,1.0,Core.NORM_MINMAX,CvType.CV_32F)
+
+            var dysq = Mat()
+            Imgproc.Scharr(pedge,dysq,-1,0,1)
+            Core.pow(dysq,2.0,dysq)
+
+            val lb_rb = linear_regression2(dysq)
+            if(lb_rb.first != 0 || lb_rb.second != 0){
+
+            } else {
+
+            }
+
         }
     }
 }
