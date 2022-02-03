@@ -46,4 +46,7 @@ dependencies {
 
     implementation "org.jetbrains.kotlinx:multik-api:0.1.1"
     implementation "org.jetbrains.kotlinx:multik-jvm:0.1.1"
+
+    implementation 'com.google.mediapipe:solution-core:latest.release'
+    implementation 'com.google.mediapipe:hands:latest.release'
 }

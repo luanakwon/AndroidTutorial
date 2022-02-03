@@ -3,6 +3,8 @@ package com.example.mykotlin
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.TextView
+import com.google.mediapipe.solutions.hands.Hands
+import com.google.mediapipe.solutions.hands.HandsOptions
 import org.jetbrains.kotlinx.multik.api.arange
 import org.jetbrains.kotlinx.multik.api.mk
 import org.jetbrains.kotlinx.multik.api.ndarray
@@ -43,6 +45,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        val handsOptions = HandsOptions.builder()
+            .setStaticImageMode(true)
+            .setMaxNumHands(1)
+            .setRunOnGpu(true).build()
+        val hands = Hands(this,handsOptions)
 
     }
 
