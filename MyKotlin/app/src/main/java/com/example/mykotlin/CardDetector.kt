@@ -1,11 +1,14 @@
 package com.example.mykotlin
 
+import androidx.core.util.lruCache
 import org.jetbrains.kotlinx.multik.api.*
 import org.jetbrains.kotlinx.multik.api.linalg.dot
+import org.jetbrains.kotlinx.multik.api.linalg.inv
 import org.jetbrains.kotlinx.multik.ndarray.data.*
 import org.jetbrains.kotlinx.multik.ndarray.operations.*
 import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
+import javax.xml.transform.dom.DOMLocator
 
 class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) {
 
@@ -94,7 +97,7 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
         sq_d.put(0,0,mk_sq_d.toFloatArray())
 
         val scores = Mat()
-        Core.gemm(weighted_img.reshape(1,height*width),sq_d,0.0,null,0.0,scores)
+        Core.gemm(weighted_img.reshape(1,height*width),sq_d,1.0,null,0.0,scores)
 
         val mmlr = Core.minMaxLoc(scores)
         return if(mmlr.maxVal < 0.8*width*0.3){
@@ -130,7 +133,7 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
 
         return Pair(possible_edges, intArrayOf(ld,ld2,sd,sd2))
     }
-    fun run(grimg: Mat){
+    fun run(grimg: Mat): Pair<Boolean,Array<Point>>{
         // orientation: landscape
         val dst = Mat()
         Imgproc.warpPerspective(
@@ -152,11 +155,84 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
 
             val lb_rb = linear_regression2(dysq)
             if(lb_rb.first != 0 || lb_rb.second != 0){
-
+                if(i==0){
+                    pt8[i,0] = sup_v[0]
+                    pt8[i,1] = lb_rb.first
+                    pt8[i,2] = sup_v[1]-1
+                    pt8[i,3] = lb_rb.second
+                } else if(i==1){
+                    pt8[i,0] = sup_v[0]
+                    pt8[i,1] = sup_v[3]+lb_rb.first
+                    pt8[i,2] = sup_v[1]-1
+                    pt8[i,3] = sup_v[3]+lb_rb.second
+                } else if(i==2){
+                    pt8[i,0] = lb_rb.first
+                    pt8[i,1] = sup_v[3]-1
+                    pt8[i,2] = lb_rb.second
+                    pt8[i,3] = sup_v[2]
+                } else{
+                    pt8[i,0] = sup_v[1]+lb_rb.first
+                    pt8[i,1] = sup_v[3]-1
+                    pt8[i,2] = sup_v[1]+lb_rb.second
+                    pt8[i,3] = sup_v[2]
+                }
             } else {
-
+                pt8[i,0] = -1
+                pt8[i,1] = -1
+                pt8[i,2] = -1
+                pt8[i,3] = -1
             }
+        }
 
+        val A = mk.zeros<Double>(8,2)
+        val C = mk.zeros<Double>(8,1)
+        var corners = Mat.ones(3,4,M_out2in.type())
+        val points_found = !(pt8.filter { it < 0 }.any())
+        return if(points_found){
+            for (i in 0..3){
+                val p = pt8[i]
+                C[i*2,0] = (p[0]*p[3] - p[2]*p[1]).toDouble()
+                A[i*2,0] = (p[3]-p[1]).toDouble()
+                A[i*2,1] = (p[0]-p[2]).toDouble()
+            }
+            A[1] = A[4].copy()
+            A[3] = A[6].copy()
+            A[5] = A[2].copy()
+            A[7] = A[0].copy()
+
+            C[1] = C[4].copy()
+            C[3] = C[6].copy()
+            C[5] = C[2].copy()
+            C[7] = C[0].copy()
+
+            intArrayOf(0,6,2,4).forEachIndexed{idx,i->
+                val resultB = mk.linalg.dot(
+                    mk.linalg.inv(A[IntRange(i,i+1)]),C[IntRange(i,i+1)])
+                    .flatten()
+                corners.put(0,idx,resultB[0])
+                corners.put(1,idx,resultB[1])
+            }
+            Core.gemm(M_out2in,corners,1.0,null,0.0,corners)
+            val corners_col2 = Mat()
+            Core.repeat(corners,3,1,corners_col2)
+            Core.divide(corners,corners_col2,corners)
+
+            val return_c = arrayOf(
+                Point(corners[0,0][0],corners[1,0][0]),
+                Point(corners[0,1][0],corners[1,1][0]),
+                Point(corners[0,2][0],corners[1,2][0]),
+                Point(corners[0,3][0],corners[1,3][0])
+            )
+
+            Pair(points_found,return_c)
+        } else {
+            val return_c = arrayOf(
+                Point(0.0,0.0),
+                Point(0.0,0.0),
+                Point(0.0,0.0),
+                Point(0.0,0.0)
+            )
+            Pair(points_found,return_c)
         }
     }
 }
