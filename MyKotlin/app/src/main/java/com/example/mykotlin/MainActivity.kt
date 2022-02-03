@@ -12,6 +12,7 @@ import org.opencv.android.OpenCVLoader
 import org.opencv.core.Core
 import org.opencv.core.CvType
 import org.opencv.core.Mat
+import org.opencv.core.Scalar
 
 class MainActivity : AppCompatActivity() {
 
@@ -35,13 +36,12 @@ class MainActivity : AppCompatActivity() {
         Core.repeat(a,3,1,b)
         println(a)
         println(b)
-        println(b.get(0,0).size)
+        Core.subtract(b, Scalar(2.0), b)
         for(i in 0..2){
             for(j in 0..3){
                 println("$i, $j, ${b.get(i,j)[0]}")
             }
         }
-
 
 
     }
