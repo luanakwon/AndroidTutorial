@@ -1,6 +1,5 @@
 package com.example.mykotlin
 
-import androidx.core.util.lruCache
 import org.jetbrains.kotlinx.multik.api.*
 import org.jetbrains.kotlinx.multik.api.linalg.dot
 import org.jetbrains.kotlinx.multik.api.linalg.inv
@@ -8,10 +7,9 @@ import org.jetbrains.kotlinx.multik.ndarray.data.*
 import org.jetbrains.kotlinx.multik.ndarray.operations.*
 import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
-import javax.xml.transform.dom.DOMLocator
 
 class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) {
-
+    // center and short_p in (y,x) or (h,w) order
     val input_pts: D2Array<Float>
     val area: Float
     val offset_in_pts: Mat
@@ -20,41 +18,76 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
     val long_d: Int
     val M_in2out: Mat
     val M_out2in: Mat
+    // reusable Mat for performance
+    var pedge_l: Mat
+    var pedge_s: Mat
+    var dysq_l: Mat
+    var dysq_s: Mat
+    var mat_d_l: Mat
+    var mat_d_s: Mat
+    var scores_l: Mat
+    var scores_s: Mat
+    var dummy: Mat
+    var peLeft: Mat
+    var peRight: Mat
+    var dst: Mat
+    var corners: Mat
+    var corners_col2: Mat
+
 
     init {
+        println("cardDetector init block")
         val short_v = ((short_p-center)*2).asType<Float>()
         val rtarray = mk.ndarray(floatArrayOf(0f, -1.5857f, 1.5857f, 0f),2,2)
         val long_v = mk.linalg.dot(short_v.reshape(1,2),rtarray).reshape(2)
         val start_p = short_p.asType<Float>() - (long_v / 2f)
+        println("get v and p")
 
         input_pts = mk.stack(mk[
                 start_p,start_p+long_v,start_p-short_v+long_v,start_p-short_v])
         area = (mk.linalg.norm(short_v.reshape(1,2))*
                 mk.linalg.norm(long_v.reshape(1,2))).toFloat()
-
+        println("input pts and area")
         short_v *= (1+p_w)
         long_v *= (1+p_w)
         val start_p2 = center.asType<Float>() + short_v/2f - long_v/2f
-
+        println("start p2")
         offset_in_pts = Mat(4,2,CvType.CV_32F)
         offset_in_pts.put(0,0,
             mk.linalg.dot(
                 mk.stack(mk[start_p2,start_p2+long_v,start_p2-short_v+long_v,start_p2-short_v]),
                 mk.ndarray(mk[mk[0f,1f],mk[1f,0f]])).toFloatArray())
-
+        println("offset in pts")
         short_d = mk.linalg.norm(short_v.reshape(1,2)).toInt()
         long_d = mk.linalg.norm(long_v.reshape(1,2)).toInt()
-
+        println("norm long short d")
         offset_out_pts = Mat(4,2,CvType.CV_32F)
         offset_out_pts.put(0,0,
             mk.ndarray(mk[mk[0,0],mk[long_d,0],mk[long_d,short_d],mk[0,short_d]])
                 .asType<Float>().toFloatArray())
-
+        println("offset out pts")
         M_in2out = Imgproc.getPerspectiveTransform(
             offset_in_pts,offset_out_pts)
         M_out2in = Imgproc.getPerspectiveTransform(
             offset_out_pts,offset_in_pts)
+        println("init end")
 
+        // reusable Mat for performance
+        // TODO: initialize
+        pedge_l
+        pedge_s
+        dysq_l
+        dysq_s
+        mat_d_l
+        mat_d_s
+        scores_l
+        scores_s
+        dummy
+        peLeft
+        peRight
+        dst
+        corners
+        corners_col2
     }
 
     fun getCardGuidePoint(order:String = "xy"): D2Array<Float>{
@@ -87,19 +120,30 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
             mk.ones(1,height)
         ).reshape(1,height*height)
 
-        val mk_sq_d = 1f / mk.linalg.pow(
-                mk.linalg.dot(xv.reshape(width*height,1),(rb-lb))/(width.toFloat())
-                + mk.linalg.dot(mk.ones(height*width, 1),lb)
-                - mk.linalg.dot(
-                    yv.reshape(height*width,1),mk.ones(1,height*height))
-                ,2)
-        val sq_d = Mat(width*height,height*height,weighted_img.type())
-        sq_d.put(0,0,mk_sq_d.toFloatArray())
+        val mk_d = (mk.linalg.dot(xv.reshape(width*height,1),(rb-lb))/(width.toFloat())
+        + mk.linalg.dot(mk.ones(height*width, 1),lb)
+        - mk.linalg.dot(yv.reshape(height*width,1),mk.ones(1,height*height)))
+        mk_d.shape.forEach { println("sqrt: $it ") }
+
+        val mat_d = Mat(width*height,height*height,CvType.CV_32FC1)
+        mat_d.put(0,0,mk_d.toFloatArray())
+
+        Core.pow(mat_d,2.0,mat_d)
+        Core.add(mat_d, Scalar(1.0),mat_d)
+        Core.divide(1.0,mat_d,mat_d)
+
+        println("Core cal")
 
         val scores = Mat()
-        Core.gemm(weighted_img.reshape(1,height*width),sq_d,1.0,null,0.0,scores)
+        Core.gemm(
+            weighted_img.reshape(0,1),
+            mat_d,1.0,
+            Mat(5,7,CvType.CV_16S),0.0,
+            scores)
+
 
         val mmlr = Core.minMaxLoc(scores)
+        println("\nlinalg over\n")
         return if(mmlr.maxVal < 0.8*width*0.3){
             Pair(0,0)
         } else {
@@ -112,6 +156,7 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
 //        } else {
 //            intArrayOf(lb[0,idx].toInt(),rb[0,idx].toInt())
 //        }
+
     }
     fun getPossibleEdge(dst:Mat): Pair<ArrayList<Mat>,IntArray>{
         val ld = (long_d*(p_w/(p_w+1))).toInt()
@@ -134,12 +179,13 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
         return Pair(possible_edges, intArrayOf(ld,ld2,sd,sd2))
     }
     fun run(grimg: Mat): Pair<Boolean,Array<Point>>{
+        println("run: started")
         // orientation: landscape
         val dst = Mat()
         Imgproc.warpPerspective(
             grimg, dst, M_in2out, Size(long_d.toDouble(),short_d.toDouble()), Imgproc.INTER_LINEAR
         )
-        println("145 231")
+        println("run: warped perspective")
         val pe_pair = getPossibleEdge(dst)
         val possible_edges = pe_pair.first
         val sup_v = pe_pair.second
