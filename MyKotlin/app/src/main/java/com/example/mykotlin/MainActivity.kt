@@ -15,10 +15,7 @@ import org.jetbrains.kotlinx.multik.ndarray.data.D1Array
 import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.CameraBridgeViewBase
 import org.opencv.android.OpenCVLoader
-import org.opencv.core.Core
-import org.opencv.core.CvType
-import org.opencv.core.Mat
-import org.opencv.core.Size
+import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
 
 class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListener2{
@@ -42,7 +39,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
             }
         }
     }
-    //private var mat : Mat = Mat()
+
+    private var cornersDst : Array<Point>? = null
     private var cardDetector: CardDetector? = null
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSION.all{
@@ -94,6 +92,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         cardDetector = CardDetector(
             mk.ndarray(mk[170,140]), mk.ndarray(mk[160,200]),0.2f)
         Log.i(TAG, "initialized card detector")
+
+        // array of point to get detected corners of card
+        cornersDst = Array //TODO
     }
 
     override fun onPause() {
@@ -127,7 +128,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         val mRGBA = inputFrame?.rgba()
         inputFrame?.gray()?.let {
             Log.i(TAG, "inputframe gray")
-            val resultPair = cardDetector!!.run(it)
+            val resultPair = cardDetector!!.run(it, )
             Log.i(TAG, "card detected : ${resultPair.first}")
         }
         return mRGBA ?: Mat()
