@@ -26,6 +26,8 @@ import android.view.Surface
 import android.view.TextureView
 import android.view.Window
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import java.lang.IllegalStateException
@@ -115,6 +117,7 @@ class MainActivity : AppCompatActivity() {
         startBackgroundThread() // TODO: should I check if the thread already exists?
         if (textureView.isAvailable){
             setupCamera()
+            // TODO: also not sure if I have to call connectCamera and setTextureViewRatio
         } else {
             textureView.surfaceTextureListener = surfaceTextureListener
         }
@@ -131,6 +134,8 @@ class MainActivity : AppCompatActivity() {
             }
 
             // i think !!. operator would be enough
+            val pvSizeAll = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(ImageFormat.JPEG)!!
+            pvSizeAll.forEach { println("${it.width}, ${it.height}") }
             previewSize = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(ImageFormat.JPEG).maxByOrNull { it.height * it.width }!!
             //previewSize = Size(1280,720)
             imageReader = ImageReader.newInstance(previewSize.width, previewSize.height, ImageFormat.JPEG, 1)
@@ -138,6 +143,14 @@ class MainActivity : AppCompatActivity() {
 
             cameraId = id
         }
+    }
+
+    private fun setTextureViewRatio(){
+        val pLayout: ConstraintLayout = findViewById(R.id.parentCTLayout)
+        val set = ConstraintSet()
+        set.clone(pLayout)
+        set.setDimensionRatio(textureView.id,"${previewSize.height}:${previewSize.width}")
+        set.applyTo(pLayout)
     }
 
     @SuppressLint("MissingPermission")
@@ -151,7 +164,8 @@ class MainActivity : AppCompatActivity() {
             if (allPermissionsGranted()){
                 setupCamera()
                 connectCamera()
-                println("$p1, $p2, ${previewSize.width}, ${previewSize.height}")
+                // change textureView size according to the camera preview size
+                setTextureViewRatio()
             }
         }
 
