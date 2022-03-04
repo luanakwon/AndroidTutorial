@@ -2,12 +2,13 @@ package com.mediapipe.camera2kotlin
 
 // Based on TomerPacific's
 // github -> https://github.com/TomerPacific/MediumArticles/blob/master/Camrea2API/app/src/main/java/com/tomerpacific/camera2api/MainActivity.kt
-// medium ->
-// freecodecamp ->
+// medium -> https://proandroiddev.com/camera2-everything-you-wanted-to-know-2501f9fd846a
+// freecodecamp -> https://www.freecodecamp.org/news/android-camera2-api-take-photos-and-videos/
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.graphics.ImageFormat
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
@@ -15,16 +16,13 @@ import android.hardware.camera2.params.OutputConfiguration
 import android.hardware.camera2.params.SessionConfiguration
 import android.media.Image
 import android.media.ImageReader
-import android.os.Build
+import android.os.*
 import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import android.os.Handler
-import android.os.HandlerThread
 import android.util.Log
 import android.util.Size
 import android.view.Surface
 import android.view.TextureView
-import android.view.Window
+import android.widget.Button
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
@@ -50,6 +48,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var imageReader: ImageReader
     private lateinit var previewSize: Size
     private lateinit var videoSize: Size
+
+    private var captureSessionOccupied: Boolean = false
 
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all{
@@ -89,26 +89,12 @@ class MainActivity : AppCompatActivity() {
         // lateinit Views
         textureView = findViewById(R.id.textureView)
         cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
+
+        // capture button
+        findViewById<Button>(R.id.captureBtn).setOnClickListener { captureSurface() }
+
         // start thread
         startBackgroundThread()
-
-
-        // Camera Manager and CameraId
-//        val cameraManager : CameraManager =  getSystemService(Context.CAMERA_SERVICE) as CameraManager
-//        val cameraIds: Array<String> = cameraManager.cameraIdList
-//        var cameraId: String = ""
-//        for (id in cameraIds){
-//            val cameraConfig = cameraManager.getCameraCharacteristics(id)
-//            // choose lens facing back camera
-//            if (cameraConfig.get(CameraCharacteristics.LENS_FACING) != CameraCharacteristics.LENS_FACING_BACK){
-//                continue
-//            }
-//
-////            val previewSize = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(ImageFormat.JPEG).maxByOrNull { it.height * it.width }!!
-////            val imageReader = ImageReader.newInstance(previewSize.width, previewSize.height, ImageFormat.JPEG, 1)
-////            imageReader.setOnImageAvailableListener(onImageAvailableListener, backgroundHandler)
-//            cameraId = id
-//        }
 
     }
     @SuppressLint("MissingPermission")
@@ -267,11 +253,62 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun captureSurface(){
+        if (!captureSessionOccupied) {
+            captureSessionOccupied = true
+            captureRequestBuilder =
+                cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE)
+            captureRequestBuilder.addTarget(imageReader.surface)
+            //TODO: rotation something
+            cameraCaptureSession.capture(captureRequestBuilder.build(), captureCallback, null)
+        }
+    }
+
+    private val captureCallback = object: CameraCaptureSession.CaptureCallback(){
+        override fun onCaptureStarted(
+            session: CameraCaptureSession,
+            request: CaptureRequest,
+            timestamp: Long,
+            frameNumber: Long
+        ) {
+            Log.i(TAG, "Capture started")
+            super.onCaptureStarted(session, request, timestamp, frameNumber)
+        }
+
+        override fun onCaptureCompleted(
+            session: CameraCaptureSession,
+            request: CaptureRequest,
+            result: TotalCaptureResult
+        ) {
+            Log.i(TAG, "Capture completed")
+            super.onCaptureCompleted(session, request, result)
+        }
+
+        override fun onCaptureFailed(
+            session: CameraCaptureSession,
+            request: CaptureRequest,
+            failure: CaptureFailure
+        ) {
+            Log.i(TAG, "Capture failed")
+            super.onCaptureFailed(session, request, failure)
+        }
+    }
+
     // Image reader -- is this for taking photo?
-    val onImageAvailableListener = object : ImageReader.OnImageAvailableListener{
+    // this function is the last one to be called
+    val onImageAvailableListener = object: ImageReader.OnImageAvailableListener{
         override fun onImageAvailable(reader: ImageReader) {
-            Toast.makeText(this@MainActivity, "Photo Taken!!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this@MainActivity, "Photo Taken!", Toast.LENGTH_SHORT).show()
             val image: Image = reader.acquireLatestImage()
+            val buffer = image.planes[0].buffer
+            val bytes = ByteArray(buffer.capacity())
+            buffer.get(bytes)
+            Log.i(TAG, "buffer cap: ${buffer.capacity()}byte size:${bytes.size}")
+            val bitmapImg = BitmapFactory.decodeByteArray(bytes,0,bytes.size)
+            Log.i(TAG, "BM h: ${bitmapImg.height} w: ${bitmapImg.width}")
+//            Handler(Looper.getMainLooper()).post {
+//                imageView.setImageBitmap(bitmapImg)
+//            }
             image.close()
         }
     }
