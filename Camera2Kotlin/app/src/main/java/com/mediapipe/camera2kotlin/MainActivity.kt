@@ -50,6 +50,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var videoSize: Size
 
     private var captureSessionOccupied: Boolean = false
+    private var connectCameraFirstCall: Boolean = true
 
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all{
@@ -100,16 +101,21 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("MissingPermission")
     override fun onResume() {
         super.onResume()
+        Log.i(TAG, "onResume called")
         startBackgroundThread() // TODO: should I check if the thread already exists?
         if (textureView.isAvailable){
             setupCamera()
             // TODO: also not sure if I have to call connectCamera and setTextureViewRatio
+            connectCamera()
+            // change textureView size according to the camera preview size
+            setTextureViewRatio()
         } else {
             textureView.surfaceTextureListener = surfaceTextureListener
         }
     }
 
     private fun setupCamera(){
+        Log.i(TAG, "setupCamera called")
         val cameraIds: Array<String> = cameraManager.cameraIdList
 
         for (id in cameraIds){
@@ -132,6 +138,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setTextureViewRatio(){
+        Log.i(TAG, "setTextureViewRatio called")
         val pLayout: ConstraintLayout = findViewById(R.id.parentCTLayout)
         val set = ConstraintSet()
         set.clone(pLayout)
@@ -141,7 +148,11 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("MissingPermission")
     private fun connectCamera(){
-        cameraManager.openCamera(cameraId, cameraStateCallback,backgroundHandler)
+        Log.i(TAG, "connectCamera first call? $connectCameraFirstCall")
+        if (connectCameraFirstCall){
+            connectCameraFirstCall = false
+            cameraManager.openCamera(cameraId, cameraStateCallback,backgroundHandler)
+        }
     }
 
     // Surface texture listener
@@ -311,5 +322,16 @@ class MainActivity : AppCompatActivity() {
 //            }
             image.close()
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.i(TAG, "On pause called")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.i(TAG, "On destroy called")
+        // TODO: BufferQueueProducer BufferQueue has been abandoned -> fix this
     }
 }
