@@ -78,6 +78,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
         setContentView(R.layout.activity_main)
+        Log.i(TAG,"onCreate called")
 
         // check permissions
         if (allPermissionsGranted()){
@@ -97,21 +98,6 @@ class MainActivity : AppCompatActivity() {
         // start thread
         startBackgroundThread()
 
-    }
-    @SuppressLint("MissingPermission")
-    override fun onResume() {
-        super.onResume()
-        Log.i(TAG, "onResume called")
-        startBackgroundThread() // TODO: should I check if the thread already exists?
-        if (textureView.isAvailable){
-            setupCamera()
-            // TODO: also not sure if I have to call connectCamera and setTextureViewRatio
-            connectCamera()
-            // change textureView size according to the camera preview size
-            setTextureViewRatio()
-        } else {
-            textureView.surfaceTextureListener = surfaceTextureListener
-        }
     }
 
     private fun setupCamera(){
@@ -172,6 +158,7 @@ class MainActivity : AppCompatActivity() {
 
         override fun onSurfaceTextureDestroyed(p0: SurfaceTexture): Boolean {
             //TODO("Not yet implemented")
+
             return true
         }
 
@@ -210,6 +197,7 @@ class MainActivity : AppCompatActivity() {
 
         override fun onDisconnected(p0: CameraDevice) {
             //TODO("Not yet implemented")
+            Log.i(TAG, "camera device disconnected..?")
         }
 
         override fun onError(cameraDevice: CameraDevice, error: Int) {
@@ -324,6 +312,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("MissingPermission")
+    override fun onResume() {
+        super.onResume()
+        Log.i(TAG, "onResume called")
+        startBackgroundThread() // TODO: should I check if the thread already exists?
+        if (textureView.isAvailable){
+            setupCamera()
+            // TODO: also not sure if I have to call connectCamera and setTextureViewRatio
+            connectCamera()
+            // change textureView size according to the camera preview size
+            setTextureViewRatio()
+        } else {
+            textureView.surfaceTextureListener = surfaceTextureListener
+        }
+    }
+
     override fun onPause() {
         super.onPause()
         Log.i(TAG, "On pause called")
@@ -332,6 +336,8 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         Log.i(TAG, "On destroy called")
-        // TODO: BufferQueueProducer BufferQueue has been abandoned -> fix this
+        // BufferQueueProducer BufferQueue has been abandoned -> fixed
+        // idk release something somewhere
+        cameraDevice.close()
     }
 }
