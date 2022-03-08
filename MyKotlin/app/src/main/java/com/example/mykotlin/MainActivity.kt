@@ -7,29 +7,33 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
-import android.hardware.camera2.CameraCaptureSession
-import android.hardware.camera2.CameraDevice
-import android.hardware.camera2.CameraManager
-import android.hardware.camera2.CaptureRequest
+import android.graphics.BitmapFactory
+import android.graphics.ImageFormat
+import android.graphics.SurfaceTexture
+import android.hardware.camera2.*
+import android.hardware.camera2.params.OutputConfiguration
+import android.hardware.camera2.params.SessionConfiguration
+import android.media.Image
 import android.media.ImageReader
+import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
-import android.view.SurfaceView
+import android.util.Size
+import android.view.Surface
 import android.view.TextureView
 import android.widget.Button
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import org.jetbrains.kotlinx.multik.api.mk
 import org.jetbrains.kotlinx.multik.api.ndarray
-import org.jetbrains.kotlinx.multik.ndarray.data.D1Array
 import org.opencv.android.BaseLoaderCallback
-import org.opencv.android.CameraBridgeViewBase
 import org.opencv.android.OpenCVLoader
 import org.opencv.core.*
-import org.opencv.imgproc.Imgproc
 
-class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListener2{
+class MainActivity : AppCompatActivity(){
 
     companion object {
         private const val TAG = "MainActivity: "
@@ -44,7 +48,6 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
                 SUCCESS -> {
                     Log.i(TAG, "opencv loaded successfully")
                     //maybe??
-                    cameraBridgeViewBase!!.enableView()
                 }
                 else -> super.onManagerConnected(status)
             }
@@ -66,6 +69,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
     private var captureSessionOccupied: Boolean = false
     private var connectCameraFirstCall: Boolean = true
+    private var numBackgroundThreads: Int = 0
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSION.all{
         ContextCompat.checkSelfPermission(
@@ -115,7 +119,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         findViewById<Button>(R.id.captureBtn).setOnClickListener {captureSurface()}
 
         // start cameraVideoThread
-        startBackgroundThread()
+        if (numBackgroundThreads == 0) startBackgroundThread()
 
         // initialize card detector
         cardDetector = CardDetector(
@@ -134,34 +138,241 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         super.onDestroy()
         Log.i(TAG, "onDestroy called")
         cameraDevice.close()
+        stopBackgroundThread()
     }
 
     @SuppressLint("MissingPermission")
     override fun onResume() {
-        //TODO From here https://github.com/luanakwon/AndroidTutorial/blob/main/Camera2Kotlin/app/src/main/java/com/mediapipe/camera2kotlin/MainActivity.kt
         super.onResume()
+        if(numBackgroundThreads == 0) startBackgroundThread() // still not sure if i have to check the existence
+        // Resume Opencv
         if(!OpenCVLoader.initDebug()){
             Log.e(TAG, "opencv init debug error")
         } else {
             baseLoaderCallback?.onManagerConnected(BaseLoaderCallback.SUCCESS)
         }
-    }
-
-    override fun onCameraViewStarted(width: Int, height: Int) {
-        //mat = Mat(width, height, CvType.CV_8UC4)
-    }
-
-    override fun onCameraViewStopped() {
-        //TODO "Not yet implemented"
-    }
-
-    override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame?): Mat {
-        val mRGBA = inputFrame?.rgba()
-        inputFrame?.gray()?.let {
-            Log.i(TAG, "inputframe gray")
-            val resultPair = cardDetector!!.run(it, )
-            Log.i(TAG, "card detected : ${resultPair.first}")
+        // Resume camera2
+        if(textureView.isAvailable){
+            setupCamera()
+            connectCamera()
+            setTextureViewRatio()
+        } else {
+            textureView.surfaceTextureListener = surfaceTextureListener
         }
-        return mRGBA ?: Mat()
     }
+
+    private fun setupCamera(){
+        // get ids of available camera
+        val cameraIds: Array<String> = cameraManager.cameraIdList
+        // choose and init a camera facing back
+        for (id in cameraIds){
+            val cameraCharacteristics = cameraManager.getCameraCharacteristics(id)
+            if (cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) != CameraCharacteristics.LENS_FACING_BACK){
+                continue
+            }
+            // i think !!. operator would be enough
+            previewSize = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(ImageFormat.JPEG).maxByOrNull { it.height * it.width }!!
+            //previewSize = Size(1280,720)
+            imageReader = ImageReader.newInstance(previewSize.width, previewSize.height, ImageFormat.JPEG, 1)
+            imageReader.setOnImageAvailableListener(onImageAvailableListener, backgroundHandler)
+
+            cameraId = id
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun connectCamera(){
+        if (connectCameraFirstCall){
+            connectCameraFirstCall = false
+            cameraManager.openCamera(cameraId, cameraStateCallback, backgroundHandler)
+        }
+    }
+
+    /* Change TextureView's aspect ratio to prevent stretched image */
+    private fun setTextureViewRatio(){
+        val pLayout: ConstraintLayout = findViewById(R.id.parentCTLayout)
+        val set = ConstraintSet()
+        set.clone(pLayout)
+        set.setDimensionRatio(textureView.id, "${previewSize.height}:${previewSize.width}")
+        set.applyTo(pLayout)
+    }
+
+    /* Surface texture listener */
+    private val surfaceTextureListener = object : TextureView.SurfaceTextureListener{
+        override fun onSurfaceTextureAvailable(p0: SurfaceTexture, p1: Int, p2: Int) {
+            if (allPermissionsGranted()){
+                setupCamera()
+                connectCamera()
+                setTextureViewRatio()
+            }
+        }
+
+        override fun onSurfaceTextureSizeChanged(p0: SurfaceTexture, p1: Int, p2: Int) {
+            //TODO("Not yet implemented")
+        }
+
+        override fun onSurfaceTextureDestroyed(p0: SurfaceTexture): Boolean {
+            //TODO("Not yet implemented")
+
+            return true
+        }
+
+        override fun onSurfaceTextureUpdated(p0: SurfaceTexture) {
+            //TODO("Not yet implemented")
+        }
+    }
+
+    /* camera State Callback */
+    private val cameraStateCallback = object : CameraDevice.StateCallback(){
+        override fun onOpened(camera: CameraDevice) {
+            cameraDevice = camera
+            val surfaceTexture: SurfaceTexture? = textureView.surfaceTexture
+            surfaceTexture?.setDefaultBufferSize(previewSize.width, previewSize.height)
+            val previewSurface: Surface = Surface(surfaceTexture)
+
+            captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
+            captureRequestBuilder.addTarget(previewSurface)
+
+            // new api
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val sessionConfig: SessionConfiguration =
+                    SessionConfiguration(
+                        SessionConfiguration.SESSION_REGULAR,
+                        listOf(OutputConfiguration(previewSurface), OutputConfiguration(imageReader.surface)),
+                        ContextCompat.getMainExecutor(this@MainActivity),
+                        captureStateCallback
+                    )
+                cameraDevice.createCaptureSession(sessionConfig)
+            } else { // deprecated since api level 30
+                cameraDevice.createCaptureSession(
+                    listOf(previewSurface, imageReader.surface),
+                    captureStateCallback,
+                    null)
+            }
+        }
+
+        override fun onDisconnected(camera: CameraDevice) {
+            //TODO("Not yet implemented")
+        }
+
+        override fun onError(camera: CameraDevice, error: Int) {
+            val errorMsg = when(error) {
+                ERROR_CAMERA_DEVICE -> "Fatal (device)"
+                ERROR_CAMERA_DISABLED -> "Device policy"
+                ERROR_CAMERA_IN_USE -> "Camera in use"
+                ERROR_CAMERA_SERVICE -> "Fatal (service)"
+                ERROR_MAX_CAMERAS_IN_USE -> "Maximum cameras in use"
+                else -> "Unknown"
+            }
+            Log.e(TAG, "Error when trying to connect camera $errorMsg")
+        }
+    }
+
+    /* Capture State Callback
+    * for preview */
+    private val captureStateCallback = object: CameraCaptureSession.StateCallback(){
+        override fun onConfigured(session: CameraCaptureSession) {
+            cameraCaptureSession = session
+            captureRequestBuilder.set(
+                CaptureRequest.CONTROL_AF_MODE,
+                CaptureResult.CONTROL_AF_MODE_CONTINUOUS_VIDEO
+            )
+            try{
+                cameraCaptureSession.setRepeatingRequest(
+                    captureRequestBuilder.build(), null, backgroundHandler
+                )
+            } catch(e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        override fun onConfigureFailed(session: CameraCaptureSession) {
+            Log.e(TAG, "captureStateCallback Configuration failed")
+        }
+    }
+
+    /* capture callback
+    * executed when capture preview requested.
+    * though not sure if this is necessary  */
+    private val captureCallback = object: CameraCaptureSession.CaptureCallback(){
+        override fun onCaptureStarted(
+            session: CameraCaptureSession,
+            request: CaptureRequest,
+            timestamp: Long,
+            frameNumber: Long
+        ) {
+            super.onCaptureStarted(session, request, timestamp, frameNumber)
+        }
+
+        override fun onCaptureCompleted(
+            session: CameraCaptureSession,
+            request: CaptureRequest,
+            result: TotalCaptureResult
+        ) {
+            super.onCaptureCompleted(session, request, result)
+        }
+
+        override fun onCaptureFailed(
+            session: CameraCaptureSession,
+            request: CaptureRequest,
+            failure: CaptureFailure
+        ) {
+            super.onCaptureFailed(session, request, failure)
+        }
+    }
+
+    /* On Image Available listener
+    * This is (i think) called after successful image capture
+    * any operation on captured image can be done here
+    * original code converted into lambda */
+    private val onImageAvailableListener =
+        ImageReader.OnImageAvailableListener { reader ->
+            val image: Image = reader.acquireLatestImage()
+            val buffer = image.planes[0].buffer // for JPEG, there is only one plane
+            val bytes = ByteArray(buffer.capacity())
+            buffer.get(bytes)
+            val bitmapImage = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            /*Do whatever*/
+            image.close()
+        }
+
+    // Handler
+    private fun startBackgroundThread(){
+        numBackgroundThreads += 1
+        backgroundHandlerThread = HandlerThread("CameraVideoThread")
+        backgroundHandlerThread.start()
+        backgroundHandler = Handler(
+            backgroundHandlerThread.looper
+        )
+    }
+    private fun stopBackgroundThread(){
+        numBackgroundThreads -= 1
+        backgroundHandlerThread.quitSafely()
+        backgroundHandlerThread.join()
+    }
+
+    /* request preview snapshot.
+    * temporary implementation invoked by Capture button
+    * operation on the captured image will be time consuming,
+    * so a flag is used to ensure this is done one at a time.
+    * Occupation should be freed at the end of operation
+    * TODO: make this request automatic  */
+    private fun captureSurface(){
+        if (!captureSessionOccupied) {
+            captureSessionOccupied = true
+            captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE)
+            captureRequestBuilder.addTarget(imageReader.surface)
+            // TODO: match rotation
+            cameraCaptureSession.capture(captureRequestBuilder.build(), captureCallback, null)
+        }
+    }
+//    override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame?): Mat {
+//        val mRGBA = inputFrame?.rgba()
+//        inputFrame?.gray()?.let {
+//            Log.i(TAG, "inputframe gray")
+//            val resultPair = cardDetector!!.run(it, )
+//            Log.i(TAG, "card detected : ${resultPair.first}")
+//        }
+//        return mRGBA ?: Mat()
+//    }
 }
