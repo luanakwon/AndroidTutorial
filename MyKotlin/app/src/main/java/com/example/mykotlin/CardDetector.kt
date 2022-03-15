@@ -98,7 +98,7 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
     fun getCardGuideArea(): Float{
         return area
     }
-    fun linear_regression2(/*weighted_img = pedge */ isLong: Boolean): Pair<Int,Int>{
+    private fun linear_regression2(/*weighted_img = pedge */ isLong: Boolean): Pair<Int,Int>{
         val weighted_img = if (isLong) pedge_l else pedge_s
         val mat_d = if (isLong) mat_d_l else mat_d_s
         val scores = if (isLong) scores_l else scores_s
@@ -148,7 +148,7 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
         }
 
     }
-    fun getPossibleEdge(/*dst:Mat*/): ArrayList<Mat>{
+    private fun getPossibleEdge(/*dst:Mat*/): ArrayList<Mat>{
 
         val possible_edges = arrayListOf<Mat>()
         possible_edges.add(dst.submat(0,sd,ld,ld2))
@@ -162,6 +162,7 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
 
         return possible_edges
     }
+
     fun run(grimg: Mat, corners_dst: Array<Point>): Boolean {
         // orientation: landscape
 

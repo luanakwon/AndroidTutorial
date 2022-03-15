@@ -332,7 +332,10 @@ class MainActivity : AppCompatActivity(){
             val bytes = ByteArray(buffer.capacity())
             buffer.get(bytes)
             val bitmapImage = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-            /*Do whatever*/
+            /*TODO: Do whatever at here*/
+            Log.i(TAG, "bitmapImage: ${bitmapImage.width} ${bitmapImage.height}")
+            // the image is rotated, but rather than rotating it again, i'll use it as it is
+
             image.close()
         }
 
