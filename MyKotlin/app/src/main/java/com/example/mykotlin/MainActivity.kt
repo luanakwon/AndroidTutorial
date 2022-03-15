@@ -1,12 +1,12 @@
 package com.example.mykotlin
 
 import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
 import android.util.Log
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.ImageFormat
 import android.graphics.SurfaceTexture
@@ -15,23 +15,25 @@ import android.hardware.camera2.params.OutputConfiguration
 import android.hardware.camera2.params.SessionConfiguration
 import android.media.Image
 import android.media.ImageReader
-import android.os.Build
-import android.os.Handler
-import android.os.HandlerThread
+import android.os.*
 import android.util.Size
 import android.view.Surface
 import android.view.TextureView
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.BitmapCompat
 import org.jetbrains.kotlinx.multik.api.mk
 import org.jetbrains.kotlinx.multik.api.ndarray
 import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.OpenCVLoader
+import org.opencv.android.Utils
 import org.opencv.core.*
+import org.opencv.imgproc.Imgproc
 
 class MainActivity : AppCompatActivity(){
 
@@ -57,6 +59,7 @@ class MainActivity : AppCompatActivity(){
     private lateinit var cornersDst : Array<Point>
     private lateinit var cardDetector: CardDetector
     private lateinit var textureView: TextureView
+    private lateinit var imageView: ImageView
     private lateinit var backgroundHandlerThread: HandlerThread
     private lateinit var backgroundHandler: Handler
     private lateinit var cameraId: String
@@ -67,9 +70,14 @@ class MainActivity : AppCompatActivity(){
     private lateinit var imageReader: ImageReader
     private lateinit var previewSize: Size
 
+    private lateinit var grImg: Mat
+    private lateinit var rgbImg: Mat
+
     private var captureSessionOccupied: Boolean = false
     private var connectCameraFirstCall: Boolean = true
     private var numBackgroundThreads: Int = 0
+
+
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSION.all{
         ContextCompat.checkSelfPermission(
@@ -114,6 +122,7 @@ class MainActivity : AppCompatActivity(){
         // lateinit views
         textureView = findViewById(R.id.textureView)
         cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        imageView = findViewById(R.id.thumbnail)
 
         // capture btn onClickListener
         findViewById<Button>(R.id.captureBtn).setOnClickListener {captureSurface()}
@@ -121,9 +130,13 @@ class MainActivity : AppCompatActivity(){
         // start cameraVideoThread
         if (numBackgroundThreads == 0) startBackgroundThread()
 
-        // initialize card detector
+        // initialize card detector (h,w order)
         cardDetector = CardDetector(
-            mk.ndarray(mk[170,140]), mk.ndarray(mk[160,200]),0.2f)
+            mk.ndarray(mk[500,350]), mk.ndarray(mk[470,510]),0.2f)
+
+        // memoryspace for imput image
+        grImg = Mat()
+        rgbImg = Mat()
 
         // array of point to get detected corners of card
         cornersDst = Array<Point>(4){ Point(0.0,0.0) } //TODO -> done..?
@@ -334,8 +347,22 @@ class MainActivity : AppCompatActivity(){
             val bitmapImage = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
             /*TODO: Do whatever at here*/
             Log.i(TAG, "bitmapImage: ${bitmapImage.width} ${bitmapImage.height}")
-            // the image is rotated, but rather than rotating it again, i'll use it as it is
+            // the image is rotated, but rather than rotating it back, i'll use it as it is
+            Utils.bitmapToMat(bitmapImage,rgbImg)
+            Imgproc.cvtColor(rgbImg,grImg,Imgproc.COLOR_RGB2GRAY)
 
+            // Just to check
+            val bitmapSmall = Bitmap.createBitmap(bitmapImage.width,bitmapImage.height,Bitmap.Config.ARGB_8888)
+            Utils.matToBitmap(grImg,bitmapSmall)
+            Handler(Looper.getMainLooper()).post {
+                imageView.setImageBitmap(bitmapSmall)
+            }
+
+            cardDetector.runDetection(grImg,cornersDst)
+            Log.i(TAG, "rst0: ${cornersDst[0].x}, ${cornersDst[0].y}")
+            Log.i(TAG, "rst1: ${cornersDst[1].x}, ${cornersDst[1].y}")
+            Log.i(TAG, "rst2: ${cornersDst[2].x}, ${cornersDst[2].y}")
+            Log.i(TAG, "rst3: ${cornersDst[3].x}, ${cornersDst[3].y}")
             image.close()
         }
 
@@ -365,7 +392,6 @@ class MainActivity : AppCompatActivity(){
             captureSessionOccupied = true
             captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE)
             captureRequestBuilder.addTarget(imageReader.surface)
-            // TODO: match rotation
             cameraCaptureSession.capture(captureRequestBuilder.build(), captureCallback, null)
         }
     }

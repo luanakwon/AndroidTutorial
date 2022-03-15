@@ -35,6 +35,7 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
     var dst: Mat
     var corners: Mat
     var corners_col2: Mat
+    var linRegThresConst: Float
 
     init {
         val short_v = ((short_p-center)*2).asType<Float>()
@@ -86,6 +87,8 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
         dst = Mat(short_d,long_d,CvType.CV_8UC1)
         corners = Mat(3,4,M_out2in.type())
         corners_col2 = Mat(3,4,corners.type())
+
+        linRegThresConst = 0.8f
     }
 
     fun getCardGuidePoint(order:String = "xy"): D2Array<Float>{
@@ -98,7 +101,7 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
     fun getCardGuideArea(): Float{
         return area
     }
-    private fun linear_regression2(/*weighted_img = pedge */ isLong: Boolean): Pair<Int,Int>{
+    private fun linear_regression2(/*weighted_img = pedge */ isLong: Boolean): Pair<Int,Int>{ //TODO: Out of Mem
         val weighted_img = if (isLong) pedge_l else pedge_s
         val mat_d = if (isLong) mat_d_l else mat_d_s
         val scores = if (isLong) scores_l else scores_s
@@ -141,7 +144,7 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
             scores)
 
         val mmlr = Core.minMaxLoc(scores)
-        return if(mmlr.maxVal < 0.8*width*0.3){
+        return if(mmlr.maxVal < 0.8*width*linRegThresConst){
             Pair(0,0)
         } else {
             Pair(lb[0,mmlr.maxLoc.x.toInt()].toInt(),rb[0,mmlr.maxLoc.x.toInt()].toInt())
@@ -163,7 +166,7 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
         return possible_edges
     }
 
-    fun run(grimg: Mat, corners_dst: Array<Point>): Boolean {
+    fun runDetection(grimg: Mat, corners_dst: Array<Point>): Boolean {
         // orientation: landscape
 
         Imgproc.warpPerspective(
