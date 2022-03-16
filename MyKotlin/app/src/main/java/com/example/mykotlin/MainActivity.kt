@@ -184,8 +184,8 @@ class MainActivity : AppCompatActivity(){
                 continue
             }
             // i think !!. operator would be enough
-            previewSize = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(ImageFormat.JPEG).maxByOrNull { it.height * it.width }!!
-            //previewSize = Size(1280,720)
+            //previewSize = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(ImageFormat.JPEG).maxByOrNull { it.height * it.width }!!
+            previewSize = Size(1280,720)
             imageReader = ImageReader.newInstance(previewSize.width, previewSize.height, ImageFormat.JPEG, 1)
             imageReader.setOnImageAvailableListener(onImageAvailableListener, backgroundHandler)
 
@@ -345,28 +345,29 @@ class MainActivity : AppCompatActivity(){
             val bytes = ByteArray(buffer.capacity())
             buffer.get(bytes)
             val bitmapImage = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            image.close()
             /*TODO: Do whatever at here*/
             Log.i(TAG, "bitmapImage: ${bitmapImage.width} ${bitmapImage.height}")
             // the image is rotated, but rather than rotating it back, i'll use it as it is
             Utils.bitmapToMat(bitmapImage,rgbImg)
             Imgproc.cvtColor(rgbImg,grImg,Imgproc.COLOR_RGB2GRAY)
 
-            // Just to check
-            val bitmapSmall = Bitmap.createBitmap(bitmapImage.width,bitmapImage.height,Bitmap.Config.ARGB_8888)
-            Utils.matToBitmap(grImg,bitmapSmall)
-            Handler(Looper.getMainLooper()).post {
-                imageView.setImageBitmap(bitmapSmall)
-            }
+//            // Just to check
+//            val bitmapSmall = Bitmap.createBitmap(bitmapImage.width,bitmapImage.height,Bitmap.Config.ARGB_8888)
+//            Utils.matToBitmap(grImg,bitmapSmall)
+//            Handler(Looper.getMainLooper()).post {
+//                imageView.setImageBitmap(bitmapSmall)
+//            }
 
             cardDetector.runDetection(grImg,cornersDst)
             Log.i(TAG, "rst0: ${cornersDst[0].x}, ${cornersDst[0].y}")
             Log.i(TAG, "rst1: ${cornersDst[1].x}, ${cornersDst[1].y}")
             Log.i(TAG, "rst2: ${cornersDst[2].x}, ${cornersDst[2].y}")
             Log.i(TAG, "rst3: ${cornersDst[3].x}, ${cornersDst[3].y}")
-            image.close()
+
         }
 
-    // Handler
+    // Camera Video Thread Handler
     private fun startBackgroundThread(){
         numBackgroundThreads += 1
         backgroundHandlerThread = HandlerThread("CameraVideoThread")
