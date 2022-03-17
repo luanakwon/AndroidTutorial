@@ -131,8 +131,8 @@ class MainActivity : AppCompatActivity(){
         if (numBackgroundThreads == 0) startBackgroundThread()
 
         // initialize card detector (h,w order)
-        cardDetector = CardDetector(
-            mk.ndarray(mk[500,350]), mk.ndarray(mk[470,510]),0.2f)
+//        cardDetector = CardDetector(
+//            mk.ndarray(mk[500,350]), mk.ndarray(mk[470,510]),0.2f)
 
         // memoryspace for imput image
         grImg = Mat()
@@ -169,6 +169,13 @@ class MainActivity : AppCompatActivity(){
             setupCamera()
             connectCamera()
             setTextureViewRatio()
+            if (!this::cardDetector.isInitialized){
+                // initialize card detector (h,w order)
+                cardDetector = CardDetector(
+                    mk.ndarray(mk[previewSize.height*500/960,previewSize.height*350/960]),
+                    mk.ndarray(mk[previewSize.height*470/960,previewSize.height*510/960]),0.2f)
+            }
+            Log.i(TAG,"onResume ${previewSize.width} ${previewSize.height}")
         } else {
             textureView.surfaceTextureListener = surfaceTextureListener
         }
@@ -184,8 +191,8 @@ class MainActivity : AppCompatActivity(){
                 continue
             }
             // i think !!. operator would be enough
-            //previewSize = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(ImageFormat.JPEG).maxByOrNull { it.height * it.width }!!
-            previewSize = Size(1280,720)
+            previewSize = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(ImageFormat.JPEG).maxByOrNull { it.height * it.width }!!
+            //previewSize = Size(1280,720)
             imageReader = ImageReader.newInstance(previewSize.width, previewSize.height, ImageFormat.JPEG, 1)
             imageReader.setOnImageAvailableListener(onImageAvailableListener, backgroundHandler)
 
@@ -217,6 +224,13 @@ class MainActivity : AppCompatActivity(){
                 setupCamera()
                 connectCamera()
                 setTextureViewRatio()
+                if (!this@MainActivity::cardDetector.isInitialized){
+                    // initialize card detector (h,w order)
+                    cardDetector = CardDetector(
+                        mk.ndarray(mk[previewSize.height/2,previewSize.height*3/10]),
+                        mk.ndarray(mk[previewSize.height/2,previewSize.height/2]),0.2f)
+                }
+                Log.i(TAG,"STListener ${previewSize.width} ${previewSize.height}")
             }
         }
 
@@ -352,19 +366,20 @@ class MainActivity : AppCompatActivity(){
             Utils.bitmapToMat(bitmapImage,rgbImg)
             Imgproc.cvtColor(rgbImg,grImg,Imgproc.COLOR_RGB2GRAY)
 
-//            // Just to check
-//            val bitmapSmall = Bitmap.createBitmap(bitmapImage.width,bitmapImage.height,Bitmap.Config.ARGB_8888)
-//            Utils.matToBitmap(grImg,bitmapSmall)
-//            Handler(Looper.getMainLooper()).post {
-//                imageView.setImageBitmap(bitmapSmall)
-//            }
+            // Just to check
+            val bitmapSmall = Bitmap.createBitmap(bitmapImage.width,bitmapImage.height,Bitmap.Config.ARGB_8888)
+            Utils.matToBitmap(grImg,bitmapSmall)
+            Handler(Looper.getMainLooper()).post {
+                imageView.setImageBitmap(bitmapSmall)
+            }
 
-            cardDetector.runDetection(grImg,cornersDst)
+            val pointsFound = cardDetector.runDetection(grImg,cornersDst)
+            Log.i(TAG, "Points found = $pointsFound")
             Log.i(TAG, "rst0: ${cornersDst[0].x}, ${cornersDst[0].y}")
             Log.i(TAG, "rst1: ${cornersDst[1].x}, ${cornersDst[1].y}")
             Log.i(TAG, "rst2: ${cornersDst[2].x}, ${cornersDst[2].y}")
             Log.i(TAG, "rst3: ${cornersDst[3].x}, ${cornersDst[3].y}")
-
+            captureSessionOccupied = false
         }
 
     // Camera Video Thread Handler
