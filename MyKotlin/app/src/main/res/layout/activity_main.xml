@@ -63,7 +63,7 @@
         app:srcCompat="@drawable/ic_launcher_background" />
 
     <ImageView
-        android:visibility="gone"
+        android:visibility="visible"
         android:id="@+id/imageView3"
         android:layout_width="20dp"
         android:layout_height="20dp"
@@ -76,7 +76,7 @@
         app:srcCompat="@drawable/ic_launcher_background" />
 
     <ImageView
-        android:visibility="gone"
+        android:visibility="visible"
         android:id="@+id/imageView4"
         android:layout_width="20dp"
         android:layout_height="20dp"
@@ -89,7 +89,7 @@
         app:srcCompat="@drawable/ic_launcher_background" />
 
     <ImageView
-        android:visibility="gone"
+        android:visibility="visible"
         android:id="@+id/imageView5"
         android:layout_width="40dp"
         android:layout_height="40dp"
