@@ -10,6 +10,7 @@ import org.jetbrains.kotlinx.multik.ndarray.data.*
 import org.jetbrains.kotlinx.multik.ndarray.operations.*
 import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
+import kotlin.math.abs
 
 class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) {
     // center and short_p in (y,x) or (h,w) order
@@ -104,7 +105,7 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
         corners = Mat(3,4,M_out2in.type())
         corners_col2 = Mat(3,4,corners.type())
 
-        linRegThresConst = 6000f
+        linRegThresConst = 5000f
         //xv_l = Mat(pedge_l.width()*pedge_l.height(),1,CvType.CV_32FC1)
         //yv_l = Mat(pedge_l.width()*pedge_l.height(),1,CvType.CV_32FC1)
         val xv = Mat(pedge_s.width()*pedge_s.height(),1,CvType.CV_32FC1)
@@ -373,8 +374,13 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
                 corners_dst[i].x = corners[0,i][0]
                 corners_dst[i].y = corners[1,i][0]
             }
-            detectedCardAreaApprox = // down-right-corner ^2 - top-left-corner ^2
-                (corners_dst[1].x*corners_dst[1].y - corners_dst[3].x*corners_dst[3].y).toFloat()
+//            detectedCardAreaApprox = // down-right-corner ^2 - top-left-corner ^2
+//                (corners_dst[1].x*corners_dst[1].y - corners_dst[3].x*corners_dst[3].y).toFloat()
+
+            // x length avg * y length avg (corner order:TL/TR/BL/BR)
+            detectedCardAreaApprox = 0.25f *
+                    abs((corners_dst[0].x+corners_dst[1].x-corners_dst[2].x-corners_dst[3].x) *
+                        (corners_dst[0].y+corners_dst[3].y-corners_dst[1].y-corners_dst[2].y)).toFloat()
         }
 
         return points_found

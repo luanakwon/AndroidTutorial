@@ -176,7 +176,7 @@ class MainActivity : AppCompatActivity(){
                 // initialize card detector (h,w order)
                 cardDetector = CardDetector(
                     mk.ndarray(mk[previewSize.height*500/960,previewSize.height*350/960]),
-                    mk.ndarray(mk[previewSize.height*470/960,previewSize.height*510/960]),0.3f)
+                    mk.ndarray(mk[previewSize.height*470/960,previewSize.height*510/960]),0.25f)
             }
             Log.i(TAG,"onResume ${previewSize.width} ${previewSize.height}")
         } else {
@@ -231,7 +231,7 @@ class MainActivity : AppCompatActivity(){
                     // initialize card detector (h,w order)
                     cardDetector = CardDetector(
                         mk.ndarray(mk[previewSize.height/2,previewSize.width - previewSize.height*4/10]),
-                        mk.ndarray(mk[previewSize.height/2,previewSize.width - previewSize.height*6/10]),0.3f)
+                        mk.ndarray(mk[previewSize.height/2,previewSize.width - previewSize.height*6/10]),0.25f)
                 }
                 Log.i(TAG,"STListener ${previewSize.width} ${previewSize.height}")
             }
@@ -386,7 +386,7 @@ class MainActivity : AppCompatActivity(){
             if (pointsFound){
                 val newNormalizedArea = cardDetector.getDetectedAreaApprox()/cardDetector.getCardGuideArea()
                 Log.i(TAG, "last norm area : $lastNormalizedArea")
-                if (abs(lastNormalizedArea - newNormalizedArea) < 0.1 ){
+                if (abs(lastNormalizedArea - newNormalizedArea) < 0.05 ){
                     Log.i(TAG, "new normalized area $newNormalizedArea")
                     successfulCardDetectionCounter+=1
                 } else {successfulCardDetectionCounter = 0}
