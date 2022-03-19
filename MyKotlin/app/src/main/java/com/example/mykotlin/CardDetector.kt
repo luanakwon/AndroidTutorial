@@ -51,6 +51,7 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
     //val ones_hw_s: Mat
     //var ones_hh_l: Mat
     //val ones_hh_s: Mat
+    var detectedCardAreaApprox: Float
 
     init {
         val short_v = ((short_p-center)*2).asType<Float>()
@@ -90,7 +91,7 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
         // long: width ld2-ld, height sd
         // pedge_l = Mat(sd,ld2-ld,CvType.CV_32FC1)
         // short: width sd2-sd, height ld
-        pedge_s = Mat(ld,(sd2-sd)/32,CvType.CV_32FC1)
+        pedge_s = Mat(ld,(sd2-sd)/16,CvType.CV_32FC1)
 
         // mat_d_l = Mat((ld2-ld)*sd,sd*sd,CvType.CV_32FC1)
         mat_d = Mat((sd2-sd)*ld,ld*ld,CvType.CV_32FC1)
@@ -103,7 +104,7 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
         corners = Mat(3,4,M_out2in.type())
         corners_col2 = Mat(3,4,corners.type())
 
-        linRegThresConst = 11f
+        linRegThresConst = 6000f
         //xv_l = Mat(pedge_l.width()*pedge_l.height(),1,CvType.CV_32FC1)
         //yv_l = Mat(pedge_l.width()*pedge_l.height(),1,CvType.CV_32FC1)
         val xv = Mat(pedge_s.width()*pedge_s.height(),1,CvType.CV_32FC1)
@@ -152,11 +153,15 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
         // val mat_d = Mat(width*height,height*height,CvType.CV_32FC1)
 //        mat_d.put(0,0,mk_d.toFloatArray())
 
-        Core.pow(mat_d,2.0,mat_d)
-        Core.add(mat_d, Scalar(1.0),mat_d)
-        Core.divide(1.0,mat_d,mat_d)
+//        Core.pow(mat_d,2.0,mat_d)
+//        Core.add(mat_d, Scalar(1.0),mat_d)
+//        Core.divide(1.0,mat_d,mat_d)
 
+        Core.absdiff(mat_d,Scalar(0.0),mat_d)
+        Core.add(mat_d, Scalar(height/8.0),mat_d)
+        Core.divide(height/8.0,mat_d,mat_d)
 
+        detectedCardAreaApprox = 0f
     }
 
     fun getCardGuidePoint(order:String = "xy"): D2Array<Float>{
@@ -168,6 +173,9 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
     }
     fun getCardGuideArea(): Float{
         return area
+    }
+    fun getDetectedAreaApprox(): Float{ // TODO: value error: negative
+        return detectedCardAreaApprox
     }
     private fun linear_regression2(/*weighted_img = pedge  isLong: Boolean*/): Pair<Int,Int>{
         //Log.i("CDD","linreg called")
@@ -200,6 +208,10 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
         //Core.add(mat_d, Scalar(1.0),mat_d)
         //Core.divide(1.0,mat_d,mat_d)
 
+//        Core.absdiff(mat_d,Scalar(0.0),mat_d)
+//        Core.add(mat_d, Scalar(height/4.0),mat_d)
+//        Core.divide(height/8.0,mat_d,mat_d)
+//
         //val scores = Mat()
         Core.gemm(
             weighted_img.reshape(0,1),
@@ -208,8 +220,8 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
             scores)
 
         val mmlr = Core.minMaxLoc(scores)
-        Log.i("CDD/linalg", "${mmlr.maxVal} : ${0.8*width*linRegThresConst}")
-        return if(mmlr.maxVal < 0.8*width*linRegThresConst){
+        Log.i("CDD/linalg", "${mmlr.maxVal} : ${linRegThresConst*width/(height.toFloat())}")
+        return if(mmlr.maxVal < linRegThresConst*width/(height.toFloat())){
             Pair(0,0)
         } else {
             Pair(mmlr.maxLoc.x.toInt()%height,mmlr.maxLoc.x.toInt()/height)
@@ -221,41 +233,74 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
         //possible_edges.add(dst.submat(0,sd,ld,ld2))
         Imgproc.resize(dst.submat(0,sd,ld,ld2),peTBLR[0],peTBLR[0].size())
         Imgproc.resize(dst.submat(sd2,short_d,ld,ld2),peTBLR[1],peTBLR[1].size())
+        Core.rotate(peTBLR[1],peTBLR[1],Core.ROTATE_180)
         //possible_edges.add(dst.submat(sd2,short_d,ld,ld2))
         Core.rotate(dst.submat(sd,sd2,0,ld)
             ,peLR,Core.ROTATE_90_CLOCKWISE)
         Imgproc.resize(peLR,peTBLR[2],peTBLR[2].size())
         //possible_edges.add(peLeft)
         Core.rotate(dst.submat(sd,sd2,ld2,long_d)
-            ,peLR,Core.ROTATE_90_CLOCKWISE)
+            ,peLR,Core.ROTATE_90_COUNTERCLOCKWISE)
         Imgproc.resize(peLR,peTBLR[3],peTBLR[3].size())
         //possible_edges.add(peRight)
     }
 
     fun runDetection(grimg: Mat, corners_dst: Array<Point>): Boolean {
-        linRegThresConst += 0.5f
+        //linRegThresConst += 0.5f
         Log.i("CDD","thres : $linRegThresConst")
 
         // orientation: landscape
+
+        println("grimg wh${grimg.width()}, ${grimg.height()}")
 
         Imgproc.warpPerspective(
             grimg, dst, M_in2out, Size(long_d.toDouble(),short_d.toDouble()), Imgproc.INTER_LINEAR
         )
 
+        println("dst wh ${dst.width()}, ${dst.height()}")
+
         getPossibleEdge(/*dst*/)
         // val sup_v = pe_pair.second // ld ld2 sd sd2
+
+        println("B: ${peTBLR[1].width()}, ${peTBLR[1].height()}")
+
+
+
 
         val pt8 = mk.zeros<Int>(4,4)
         peTBLR.forEachIndexed{i, _pedge ->
             // first two is long edge, second two is short edge
             //val pedge = if (i < 2) pedge_l else pedge_s
             val pedge = pedge_s
-            Core.normalize(_pedge,pedge,0.0,1.0,Core.NORM_MINMAX,CvType.CV_32F)
+            //println("_pedge type: ${CvType.typeToString(_pedge.type())}")
+            _pedge.put(0,0,250.0)
+            _pedge.put(0,1,25.0)
+            Core.normalize(_pedge,pedge,0.0,1.0,Core.NORM_MINMAX,CvType.CV_32F)//TODO improve
+            //Core.divide(_pedge,Scalar(256.0),pedge,1.0,CvType.CV_32SC1)
+            //val pedgeMinMax = Core.minMaxLoc(pedge)
+            //println("pedge min ${pedgeMinMax.minVal}, max: ${pedgeMinMax.maxVal}, type: ${CvType.typeToString(pedge.type())}")
 
             Imgproc.Scharr(pedge,pedge,-1,0,1)
             Core.pow(pedge,2.0,pedge)
 
-            val lb_rb = linear_regression2()
+//            if (i==2) {
+//                println()
+//                for (j in 0 until _pedge.width() * _pedge.height()) {
+//                    if (j % (_pedge.width()) == 0) {
+//                        println()
+//                    }
+//                    print("${(_pedge[j / _pedge.width(), j % _pedge.width()][0]).toInt()} ")
+//
+//                }
+//                println()
+//                println("${_pedge.width()}, ${_pedge.height()}")
+//            }
+
+            val lb_rb = if (i<4) {
+                linear_regression2()
+            } else {
+                Pair(0,0)
+            }
             if(lb_rb.first != 0 || lb_rb.second != 0){
                 if(i==0){
                     pt8[i,0] = ld
@@ -328,6 +373,8 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
                 corners_dst[i].x = corners[0,i][0]
                 corners_dst[i].y = corners[1,i][0]
             }
+            detectedCardAreaApprox = // down-right-corner ^2 - top-left-corner ^2
+                (corners_dst[1].x*corners_dst[1].y - corners_dst[3].x*corners_dst[3].y).toFloat()
         }
 
         return points_found

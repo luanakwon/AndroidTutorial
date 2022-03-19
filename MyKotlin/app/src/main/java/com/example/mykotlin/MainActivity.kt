@@ -34,6 +34,7 @@ import org.opencv.android.OpenCVLoader
 import org.opencv.android.Utils
 import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
+import kotlin.math.abs
 
 class MainActivity : AppCompatActivity(){
 
@@ -76,6 +77,8 @@ class MainActivity : AppCompatActivity(){
     private var captureSessionOccupied: Boolean = false
     private var connectCameraFirstCall: Boolean = true
     private var numBackgroundThreads: Int = 0
+    private var successfulCardDetectionCounter: Int = 0
+    private var lastNormalizedArea: Float = 0f
 
 
 
@@ -173,7 +176,7 @@ class MainActivity : AppCompatActivity(){
                 // initialize card detector (h,w order)
                 cardDetector = CardDetector(
                     mk.ndarray(mk[previewSize.height*500/960,previewSize.height*350/960]),
-                    mk.ndarray(mk[previewSize.height*470/960,previewSize.height*510/960]),0.2f)
+                    mk.ndarray(mk[previewSize.height*470/960,previewSize.height*510/960]),0.3f)
             }
             Log.i(TAG,"onResume ${previewSize.width} ${previewSize.height}")
         } else {
@@ -191,8 +194,8 @@ class MainActivity : AppCompatActivity(){
                 continue
             }
             // i think !!. operator would be enough
-            previewSize = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(ImageFormat.JPEG).maxByOrNull { it.height * it.width }!!
-            //previewSize = Size(1280,720)
+            //previewSize = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(ImageFormat.JPEG).maxByOrNull { it.height * it.width }!!
+            previewSize = Size(1280,720)
             imageReader = ImageReader.newInstance(previewSize.width, previewSize.height, ImageFormat.JPEG, 1)
             imageReader.setOnImageAvailableListener(onImageAvailableListener, backgroundHandler)
 
@@ -227,8 +230,8 @@ class MainActivity : AppCompatActivity(){
                 if (!this@MainActivity::cardDetector.isInitialized){
                     // initialize card detector (h,w order)
                     cardDetector = CardDetector(
-                        mk.ndarray(mk[previewSize.height/2,previewSize.height*3/10]),
-                        mk.ndarray(mk[previewSize.height/2,previewSize.height/2]),0.2f)
+                        mk.ndarray(mk[previewSize.height/2,previewSize.width - previewSize.height*4/10]),
+                        mk.ndarray(mk[previewSize.height/2,previewSize.width - previewSize.height*6/10]),0.3f)
                 }
                 Log.i(TAG,"STListener ${previewSize.width} ${previewSize.height}")
             }
@@ -379,6 +382,19 @@ class MainActivity : AppCompatActivity(){
             Log.i(TAG, "rst1: ${cornersDst[1].x}, ${cornersDst[1].y}")
             Log.i(TAG, "rst2: ${cornersDst[2].x}, ${cornersDst[2].y}")
             Log.i(TAG, "rst3: ${cornersDst[3].x}, ${cornersDst[3].y}")
+
+            if (pointsFound){
+                val newNormalizedArea = cardDetector.getDetectedAreaApprox()/cardDetector.getCardGuideArea()
+                Log.i(TAG, "last norm area : $lastNormalizedArea")
+                if (abs(lastNormalizedArea - newNormalizedArea) < 0.1 ){
+                    Log.i(TAG, "new normalized area $newNormalizedArea")
+                    successfulCardDetectionCounter+=1
+                } else {successfulCardDetectionCounter = 0}
+                lastNormalizedArea = newNormalizedArea
+            } else {successfulCardDetectionCounter = 0}
+
+            Log.i(TAG, "Successful detections $successfulCardDetectionCounter")
+
             captureSessionOccupied = false
         }
 

@@ -8,7 +8,7 @@ import org.opencv.imgproc.Imgproc
 
 class MagicWand {
     companion object{
-        fun apply(img: Mat, point:IntArray, tol: Int): Mat{
+        fun applyWand(img: Mat, point:IntArray, tol: Int): Mat{
             val c0 = img[point[0],point[1]][0]
             val intimg = Mat()
             img.convertTo(intimg,CvType.CV_32S)
