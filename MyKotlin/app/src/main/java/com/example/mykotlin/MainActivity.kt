@@ -26,8 +26,6 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.BitmapCompat
-import androidx.core.os.postDelayed
 import org.jetbrains.kotlinx.multik.api.mk
 import org.jetbrains.kotlinx.multik.api.ndarray
 import org.opencv.android.BaseLoaderCallback
@@ -80,7 +78,7 @@ class MainActivity : AppCompatActivity(){
     private var numBackgroundThreads: Int = 0
     private var successfulCardDetectionCounter: Int = 0
     private var lastNormalizedArea: Float = 0f
-    private var activateRepeatedCardDetection: Boolean = false
+    private var toggleRepeatedCardDetection: Boolean = false
 
     private val repeatedCaptureRequestHandler: Handler = Handler(Looper.getMainLooper())
 
@@ -431,12 +429,12 @@ class MainActivity : AppCompatActivity(){
 //            cameraCaptureSession.capture(captureRequestBuilder.build(), captureCallback, null)
 //        }
 
-        if (!activateRepeatedCardDetection){
-            activateRepeatedCardDetection = true
+        if (!toggleRepeatedCardDetection){
+            toggleRepeatedCardDetection = true
             repeatedCaptureRequestHandler.post(object: Runnable{
                 override fun run() {
-                    Log.i("RCAPHANDLER", "act: $activateRepeatedCardDetection occ: $captureSessionOccupied")
-                    if (activateRepeatedCardDetection){
+                    Log.i("RCAPHANDLER", "act: $toggleRepeatedCardDetection occ: $captureSessionOccupied")
+                    if (toggleRepeatedCardDetection){
                         if(!captureSessionOccupied) {
                             captureSessionOccupied = true
                             captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE)
@@ -448,7 +446,7 @@ class MainActivity : AppCompatActivity(){
                 }
             })
         } else {
-            activateRepeatedCardDetection = false
+            toggleRepeatedCardDetection = false
         }
     }
 //    override fun onCameraFrame(inputFrame: CameraBridgeViewBase.CvCameraViewFrame?): Mat {
