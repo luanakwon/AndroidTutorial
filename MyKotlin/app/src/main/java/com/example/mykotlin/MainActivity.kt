@@ -81,6 +81,7 @@ class MainActivity : AppCompatActivity(){
     private var toggleRepeatedCardDetection: Boolean = false
 
     private val repeatedCaptureRequestHandler: Handler = Handler(Looper.getMainLooper())
+    private val p_w = 0.25f
 
 
 
@@ -178,7 +179,7 @@ class MainActivity : AppCompatActivity(){
                 // initialize card detector (h,w order)
                 cardDetector = CardDetector(
                     mk.ndarray(mk[previewSize.height*500/960,previewSize.height*350/960]),
-                    mk.ndarray(mk[previewSize.height*470/960,previewSize.height*510/960]),0.25f)
+                    mk.ndarray(mk[previewSize.height*470/960,previewSize.height*510/960]),p_w)
             }
             Log.i(TAG,"onResume ${previewSize.width} ${previewSize.height}")
         } else {
@@ -233,7 +234,7 @@ class MainActivity : AppCompatActivity(){
                     // initialize card detector (h,w order)
                     cardDetector = CardDetector(
                         mk.ndarray(mk[previewSize.height/2,previewSize.width - previewSize.height*4/10]),
-                        mk.ndarray(mk[previewSize.height/2,previewSize.width - previewSize.height*6/10]),0.25f)
+                        mk.ndarray(mk[previewSize.height/2,previewSize.width - previewSize.height*6/10]),p_w)
                 }
                 Log.i(TAG,"STListener ${previewSize.width} ${previewSize.height}")
             }
