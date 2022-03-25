@@ -23,6 +23,7 @@ class MagicWand(s:Size) {
         boolImg8U = Mat(s,CvType.CV_8UC1)
     }
 
+    /** dst size == img size, dst type 16SC1 */
     fun applyWand(img: Mat, point:IntArray, tol: Int, dst:Mat){
         val c0: DoubleArray = img[point[0],point[1]]
         img.convertTo(intImg,CvType.CV_16SC3)
