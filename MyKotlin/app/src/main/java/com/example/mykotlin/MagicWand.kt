@@ -7,21 +7,21 @@ class MagicWand(s:Size) {
     private val width:Int
     private val height:Int
     private var intImg:Mat
-    private var channels: ArrayList<Mat>
+    private var channels: MutableList<Mat>
     private var maxImg: Mat
     private var boolImg8U: Mat
-
 
     init {
         width = s.width.toInt()
         height = s.height.toInt()
 
         intImg = Mat(s,CvType.CV_16SC3)
-        channels = ArrayList(3)
+        channels = Array<Mat>(3){
+            Mat(s,CvType.CV_16SC1)
+        }.toMutableList()
         maxImg = Mat(s,CvType.CV_16SC1)
         boolImg8U = Mat(s,CvType.CV_8UC1)
     }
-
 
     fun applyWand(img: Mat, point:IntArray, tol: Int, dst:Mat){
         val c0: DoubleArray = img[point[0],point[1]]
