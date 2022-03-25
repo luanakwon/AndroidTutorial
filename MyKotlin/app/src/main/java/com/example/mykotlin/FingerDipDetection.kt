@@ -10,6 +10,7 @@ import com.google.mediapipe.solutions.hands.Hands
 import com.google.mediapipe.solutions.hands.HandsOptions
 import com.google.mediapipe.solutions.hands.HandsResult
 import org.opencv.android.Utils
+import org.opencv.core.CvType
 import org.opencv.core.Mat
 
 class FingerDipDetection(
@@ -20,27 +21,33 @@ class FingerDipDetection(
     min_detection_confidence:Float = 0.5f
 ){
 
-    val handsOptions = HandsOptions.builder()
+    private val handsOptions = HandsOptions.builder()
         .setStaticImageMode(static_image_mode)
         .setMaxNumHands(max_num_hands)
         .setRunOnGpu(true)
         .setModelComplexity(model_complexity)
         .setMinDetectionConfidence(min_detection_confidence)
         .build()
-    val hands = Hands(context,handsOptions)
-    val fingerDipIndices = intArrayOf(
+    private val hands = Hands(context,handsOptions)
+    private val fingerDipIndices = intArrayOf(
         HandLandmark.INDEX_FINGER_DIP,
         HandLandmark.MIDDLE_FINGER_DIP,
         HandLandmark.MIDDLE_FINGER_DIP,
         HandLandmark.PINKY_DIP
     )
+    private var crop_dx: Mat
+    private var xv: Mat
+
+
+    val thicknessList = FloatArray(100){0f}
+
+
     init {
         hands.setErrorListener { message, e -> Log.e("fingerDipdet", message)}
 
-        // hands result listener
-        // crop finger dips
-        hands.setResultListener
-
+        //lateinit variables
+        crop_dx = Mat(128,128,CvType.CV_16SC1)
+        xv = Mat(128,128,CvType.CV_16SC1)
     }
 
     val resultListener = object : ResultListener<HandsResult>{
@@ -67,6 +74,14 @@ class FingerDipDetection(
     }
     fun runDetection(img:Bitmap){ // assuming bitmap is not null
         hands.send(img)
+    }
+    fun setHandResultListener(){
+        hands.setResultListener(resultListener)
+    }
+    // returns height-wise normalized 100 thickness pixel values
+    fun shoelace(crop:Mat): Unit{
+        val c_h = crop.height()
+        val c_w = crop.width()
 
     }
 

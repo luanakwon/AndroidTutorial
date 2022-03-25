@@ -36,6 +36,7 @@ import org.opencv.imgproc.Imgproc
 import kotlin.math.abs
 
 class MainActivity : AppCompatActivity(){
+    //TODO: implement swipe to change hand(LR) function
 
     companion object {
         private const val TAG = "MainActivity: "
