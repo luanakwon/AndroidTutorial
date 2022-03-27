@@ -11,6 +11,7 @@ import com.google.mediapipe.solutions.hands.HandsOptions
 import com.google.mediapipe.solutions.hands.HandsResult
 import org.opencv.android.Utils
 import org.opencv.core.*
+import kotlin.math.sqrt
 
 class FingerDipDetection(
     context:Context,
@@ -90,7 +91,7 @@ class FingerDipDetection(
         hands.setResultListener(resultListener)
     }
     // returns height-wise normalized 100 thickness pixel values
-    fun shoelace(crop:Mat): Unit{
+    fun shoelace(crop:Mat, dMagnitude: Float, dstX:Array<Float>, dstY:Array<Float>): Unit{
         assert(crop.size() == cropSize)
         val c_h: Int = cropSize.height.toInt()
         val c_w: Int = cropSize.width.toInt()
@@ -105,28 +106,73 @@ class FingerDipDetection(
         println("crop_dx min ${mml.minVal}, max ${mml.maxVal}")
 
         Core.multiply(xv,crop_dx,xvdx)
-        val leftEdgeX = Array<Int>(c_h){
+        var leftEdgeX = Array<Int>(c_h){
             val maxLocResult = Core.minMaxLoc(
                 xvdx.submat(it,it+1,0,(c_w*0.7).toInt()))
             maxLocResult.maxLoc.x.toInt()
         }
         Core.multiply(crop_dx, Scalar(-c_w.toDouble()),crop_dx)
         Core.add(xvdx,crop_dx,xvdx)
-        val rightEdgeX = Array<Int>(c_h){
+        var rightEdgeX = Array<Int>(c_h){
             val maxLocResult = Core.minMaxLoc(
                 xvdx.submat(it,it+1,(c_w*0.3).toInt(),c_w))
             maxLocResult.maxLoc.x.toInt() + (c_w*0.3).toInt()
         }
 
-        val d_c_h = Array<Int>(c_h){0} // distances(thickness) array of size c_h(before norm)
-        val local_d = Array<Int>(2){0}
+        val d_c_h = Array<Float>(c_h){0f} // distances(thickness) array of size c_h(before norm)
+        val local_d = Array<Float>(2){0f}
         // algorithm that goes back and forth between left and right edge
         var p0_y = 0
         var p1_y = 0
         while (true){
-            var p0_x = leftEdgeX[p0_y]
+            val p0_x = leftEdgeX[p0_y]
+            var isInEdge = false
+            for (i in local_d.indices){
+                if (p1_y+i < rightEdgeX.size){
+                    isInEdge = true
+                    local_d[i] = (sqrt(
+                        (p1_y+i-p0_y)*(p1_y+i-p0_y).toFloat()
+                        +(p0_x-rightEdgeX[p1_y+i])*(p0_x-rightEdgeX[p1_y+i]).toFloat()))
+                }
+            }
+            if (!isInEdge){
+                break
+            }
+            // find min and argmin of local_d
+            var minVal = local_d[0]
+            var minLoc = 0
+            for (i in 1 until local_d.size){
+                if (minVal > local_d[i]){
+                    minVal = local_d[i]
+                    minLoc = i
+                }
+            }
+            d_c_h[p0_y] = minVal
+            // Flip edge. (name 'left' and 'right' doesn't mean anything from now on)
+            val tList = leftEdgeX
+            leftEdgeX = rightEdgeX
+            rightEdgeX = tList
+            // Flip y pointer(indexer)
+            val tp = p0_y+1
+            p0_y = p1_y+minLoc
+            p1_y = tp
+        }
+        // TODO: smooth the outliers such as thickness == 0
 
+        // y and thickness normed y-wise by dir magnitude
+        for (i in dstX.indices){
+            dstX[i] = -c_h*dstX.size/(2*dMagnitude)+i*c_h/dMagnitude
+        }
+        for (i in dstY.indices){
+            val x: Float = i*c_h.toFloat()/100.0f
+            if (0 <= x && (x.toInt()+1) < c_h){
+                val y0:Float = d_c_h[x.toInt()]
+                val y1:Float = d_c_h[x.toInt()+1]
+                val r :Float = x-x.toInt()
+                dstY[i] = (1-r)*y0 + r*y1
+            } else if ((x.toInt()+1) == c_h){
+                dstY[i] = d_c_h[c_h-1]
+            }
         }
     }
-
 }
