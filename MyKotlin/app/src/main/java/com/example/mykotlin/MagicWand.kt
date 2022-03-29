@@ -32,6 +32,7 @@ class MagicWand(s:Size) {
         val channels = ArrayList<Mat>()
         Core.split(intImg,channels)
 
+        println(channels.size)
         // assert 3 channel
         assert(channels.size == 3)
         // put max of channels at maxImg

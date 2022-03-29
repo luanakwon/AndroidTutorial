@@ -439,7 +439,8 @@ class MainActivity : AppCompatActivity(){
                 fingerDipDetector.runDetection(rgbImgBitmap)
 
 
-                captureSessionOccupied = 2 // delay free occupation
+                captureSessionOccupied = 5 // delay free occupation
+                successfulCardDetectionCounter = 0
             } else {
                 captureSessionOccupied = 0 // free occupation
             }

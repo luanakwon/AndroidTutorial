@@ -72,16 +72,27 @@ class FingerDipDetection(
     val resultListener = object : ResultListener<HandsResult>{
         override fun run(result: HandsResult?) {
             // error: no result
-            if (result == null) {return}
+            if (result == null) {
+                Log.e("FDD", "no result")
+                return
+            }
             // no hand found
-            if (result.multiHandLandmarks().isEmpty()) {return}
+            if (result.multiHandLandmarks().isEmpty()) {
+                Log.i("FDD", "no hands found")
+                return
+            }
+            // too many hands found
+            if (result.multiHandLandmarks().size > 1){
+                Log.i("FDD", "too many hands found")
+                return
+            }
             // hand(s) found
             val width = result.inputBitmap().width
             val height = result.inputBitmap().height
             val handLandmarks = result.multiHandLandmarks()[0].landmarkList
             val fingerDips = IntArray(4*2){0} // four dips, xy each
             val fingerDirs = FloatArray(4*2){0f} // same
-            val ret:Boolean = false
+            // val ret:Boolean = false
 
             val estimated4Thicknesses = Array(4){0f}
             fingerDipIndices.forEachIndexed { index, i ->
@@ -108,6 +119,7 @@ class FingerDipDetection(
                 // TODO: add correction layer that returns thickness in pixel
                 // temporarily implemented as mean
                 estimated4Thicknesses[i] = pixel2mmCoef*dstY.sum()/dstY.size
+                println("[$i] x: $cropCenterX y: $cropCenterY thickness: ${estimated4Thicknesses[i]}")
             }
 
             // TODO: start next activity with
