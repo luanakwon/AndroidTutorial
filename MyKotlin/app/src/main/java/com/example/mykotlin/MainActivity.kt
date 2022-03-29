@@ -75,7 +75,7 @@ class MainActivity : AppCompatActivity(){
     private lateinit var grImg: Mat
     private lateinit var rgbImg: Mat
 
-    private var captureSessionOccupied: Boolean = false
+    private var captureSessionOccupied: Int = 0 // if >10000 blocked || if <3 delayed
     private var connectCameraFirstCall: Boolean = true
     private var numBackgroundThreads: Int = 0
     private var successfulCardDetectionCounter: Int = 0
@@ -438,10 +438,10 @@ class MainActivity : AppCompatActivity(){
                 fingerDipDetector.setPixel2mm(pixel2mm)
                 fingerDipDetector.runDetection(rgbImgBitmap)
 
-                // stop capturing
-                // captureSessionOccupied = false
+
+                captureSessionOccupied = 2 // delay free occupation
             } else {
-                captureSessionOccupied = false
+                captureSessionOccupied = 0 // free occupation
             }
         }
 
@@ -480,11 +480,13 @@ class MainActivity : AppCompatActivity(){
                 override fun run() {
                     Log.i("RCAPHANDLER", "act: $toggleRepeatedCardDetection occ: $captureSessionOccupied")
                     if (toggleRepeatedCardDetection){
-                        if(!captureSessionOccupied) {
-                            captureSessionOccupied = true
+                        if(captureSessionOccupied == 0) { // no occupation
+                            captureSessionOccupied = 10000 // block ( wait for 10000s)
                             captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE)
                             captureRequestBuilder.addTarget(imageReader.surface)
                             cameraCaptureSession.capture(captureRequestBuilder.build(), captureCallback, null)
+                        } else {
+                            captureSessionOccupied -= 1 // wait once more
                         }
                         repeatedCaptureRequestHandler.postDelayed(this,1000)
                     }
