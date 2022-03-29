@@ -59,6 +59,7 @@ class MainActivity : AppCompatActivity(){
 
     private lateinit var cornersDst : Array<Point>
     private lateinit var cardDetector: CardDetector
+    private lateinit var fingerDipDetector: FingerDipDetection
     private lateinit var textureView: TextureView
     private lateinit var imageView: ImageView
     private lateinit var backgroundHandlerThread: HandlerThread
@@ -182,6 +183,12 @@ class MainActivity : AppCompatActivity(){
                     mk.ndarray(mk[previewSize.height*500/960,previewSize.height*350/960]),
                     mk.ndarray(mk[previewSize.height*470/960,previewSize.height*510/960]),p_w)
             }
+            if (!this::fingerDipDetector.isInitialized){
+                fingerDipDetector = FingerDipDetection(
+                    this,
+                    Size((previewSize.height/5).toDouble(),(previewSize.height/5).toDouble()))
+                fingerDipDetector.setHandResultListener()
+            }
             Log.i(TAG,"onResume ${previewSize.width} ${previewSize.height}")
         } else {
             textureView.surfaceTextureListener = surfaceTextureListener
@@ -236,6 +243,12 @@ class MainActivity : AppCompatActivity(){
                     cardDetector = CardDetector(
                         mk.ndarray(mk[previewSize.height/2,previewSize.width - previewSize.height*4/10]),
                         mk.ndarray(mk[previewSize.height/2,previewSize.width - previewSize.height*6/10]),p_w)
+                }
+                if (!this@MainActivity::fingerDipDetector.isInitialized){
+                    fingerDipDetector = FingerDipDetection(
+                        baseContext,
+                        Size((previewSize.height/5).toDouble(),(previewSize.height/5).toDouble()))
+                    fingerDipDetector.setHandResultListener()
                 }
                 Log.i(TAG,"STListener ${previewSize.width} ${previewSize.height}")
             }
@@ -399,7 +412,37 @@ class MainActivity : AppCompatActivity(){
 
             Log.i(TAG, "Successful detections $successfulCardDetectionCounter")
 
-            captureSessionOccupied = false
+            // if had enough successful card Detection, use last picture to do hand detection
+            if (successfulCardDetectionCounter > 4) {
+                val cornersDstMat = Mat(4, 2, CvType.CV_32FC1)
+                for (i in 0..3) {
+                    cornersDstMat.put(i, 0, cornersDst[i].x)
+                    cornersDstMat.put(i, 1, cornersDst[i].y)
+                }
+                val M_warpToFitCard = Imgproc.getPerspectiveTransform(
+                    cornersDstMat, cardDetector.offset_in_pts
+                )
+                Imgproc.warpPerspective(
+                    rgbImg,
+                    rgbImg,
+                    M_warpToFitCard,
+                    rgbImg.size(),
+                    Imgproc.INTER_LINEAR
+                )
+                // pixel to mm conversion coefficient
+                val pixel2mm: Float = 53.98f / cardDetector.short_d
+                val rgbImgBitmap =
+                    Bitmap.createBitmap(rgbImg.width(), rgbImg.height(), Bitmap.Config.ARGB_8888)
+                Utils.matToBitmap(rgbImg, rgbImgBitmap)
+                fingerDipDetector.setRGBImg(rgbImg)
+                fingerDipDetector.setPixel2mm(pixel2mm)
+                fingerDipDetector.runDetection(rgbImgBitmap)
+
+                // stop capturing
+                // captureSessionOccupied = false
+            } else {
+                captureSessionOccupied = false
+            }
         }
 
     // Camera Video Thread Handler

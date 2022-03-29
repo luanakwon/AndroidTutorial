@@ -3,6 +3,7 @@ package com.example.mykotlin
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
+import android.widget.Toast
 import com.google.mediapipe.formats.proto.LandmarkProto
 import com.google.mediapipe.solutioncore.ResultListener
 import com.google.mediapipe.solutions.hands.HandLandmark
@@ -36,17 +37,21 @@ class FingerDipDetection(
         HandLandmark.PINKY_DIP
     )
 
+    private val hostContext: Context
     private val cropSize: Size
     private val wand: MagicWand
-    val boolImg16S: Mat
+    private val boolImg16S: Mat
     private var crop_dx: Mat
     private var xv: Mat
     private var xvdx: Mat
+    private var rgbImg: Mat
+    private var pixel2mmCoef: Float
 
     val thicknessList: FloatArray
 
 
     init {
+        hostContext = context
         hands.setErrorListener { message, e -> Log.e("fingerDipdet", message)}
 
         cropSize = _cropSize
@@ -60,6 +65,8 @@ class FingerDipDetection(
         xvdx = Mat(_cropSize,CvType.CV_16SC1)
 
         thicknessList = FloatArray(100){0f}
+        rgbImg = Mat()
+        pixel2mmCoef = 0f
     }
 
     val resultListener = object : ResultListener<HandsResult>{
@@ -76,12 +83,38 @@ class FingerDipDetection(
             val fingerDirs = FloatArray(4*2){0f} // same
             val ret:Boolean = false
 
+            val estimated4Thicknesses = Array(4){0f}
             fingerDipIndices.forEachIndexed { index, i ->
                 fingerDips[2*index+0] = (handLandmarks[i].x*width).toInt()
                 fingerDips[2*index+1] = (handLandmarks[i].y*height).toInt()
                 fingerDirs[2*index+0] = (handLandmarks[i+1].x - handLandmarks[i].x)*width
                 fingerDirs[2*index+1] = (handLandmarks[i+1].y - handLandmarks[i].y)*height
+
+                // find crop roi (center = fingerDipCor, size = CropSize)
+                val cropCenterX = fingerDips[2*index+0]
+                val cropCenterY = fingerDips[2*index+1]
+                val dirW = fingerDirs[2*index+0]
+                val dirH = fingerDirs[2*index+1]
+                // assuming crop shape is square
+                val dRadius = (cropSize.width/2).toInt()
+                val croppedSubmat = rgbImg.submat(
+                    cropCenterY - dRadius, cropCenterY + dRadius,
+                    cropCenterX - dRadius, cropCenterX + dRadius)
+                val dMagnitude = sqrt(dirW*dirW + dirH*dirH)
+                val dstX = Array(100){0f}
+                val dstY = Array(100){0f}
+                // wand and shoelace
+                shoelace(croppedSubmat,dMagnitude,dstX,dstY)
+                // TODO: add correction layer that returns thickness in pixel
+                // temporarily implemented as mean
+                estimated4Thicknesses[i] = pixel2mmCoef*dstY.sum()/dstY.size
             }
+
+            // TODO: start next activity with
+            // estimated4Thicknesses, rgbImgBitmap
+            Toast.makeText(hostContext
+                ,"${estimated4Thicknesses[0]} ${estimated4Thicknesses[1]} ${estimated4Thicknesses[2]} ${estimated4Thicknesses[3]} "
+                ,Toast.LENGTH_SHORT).show()
         }
     }
     fun runDetection(img:Bitmap){ // assuming bitmap is not null
@@ -89,6 +122,12 @@ class FingerDipDetection(
     }
     fun setHandResultListener(){
         hands.setResultListener(resultListener)
+    }
+    fun setRGBImg(img: Mat){
+        rgbImg = img
+    }
+    fun setPixel2mm(coef: Float){
+        pixel2mmCoef = coef
     }
     // returns height-wise normalized 100 thickness pixel values
     fun shoelace(crop:Mat, dMagnitude: Float, dstX:Array<Float>, dstY:Array<Float>): Unit{
