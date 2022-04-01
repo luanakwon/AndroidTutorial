@@ -168,7 +168,7 @@ class FingerDipDetection(
         assert(crop.size() == cropSize)
         val c_h: Int = cropSize.height.toInt()
         val c_w: Int = cropSize.width.toInt()
-        wand.applyWand(crop, intArrayOf(c_h/2,c_w/2),60,boolImg16S)
+        wand.applyWand(crop, intArrayOf(c_h/2,c_w/2),30,boolImg16S)
         Core.subtract(
             boolImg16S.submat(0,c_h,1,c_w),
             boolImg16S.submat(0,c_h,0,c_w-1),
