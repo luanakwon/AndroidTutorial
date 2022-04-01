@@ -33,14 +33,14 @@ class FingerDipDetection(
     private val fingerDipIndices = intArrayOf(
         HandLandmark.INDEX_FINGER_DIP,
         HandLandmark.MIDDLE_FINGER_DIP,
-        HandLandmark.MIDDLE_FINGER_DIP,
+        HandLandmark.RING_FINGER_DIP,
         HandLandmark.PINKY_DIP
     )
 
     private val hostContext: Context
     private val cropSize: Size
     private val wand: MagicWand
-    private val boolImg16S: Mat
+    private var boolImg16S: Mat
     private var crop_dx: Mat
     private var xv: Mat
     private var xvdx: Mat
@@ -93,9 +93,21 @@ class FingerDipDetection(
             val fingerDips = IntArray(4*2){0} // four dips, xy each
             val fingerDirs = FloatArray(4*2){0f} // same
             // val ret:Boolean = false
+            println("hand landmarks size: ${handLandmarks.size}")
+            val estimated4Thicknesses = FloatArray(4){0f}
 
-            val estimated4Thicknesses = Array(4){0f}
+//            for (i in 0..3){
+//                print("[$i], ${fingerDipIndices[i]}")
+//            }
+//            println(" :: ")
+//
+//            fingerDipIndices.forEachIndexed { index, i ->
+//                print("[$index] ")
+//            }
+//            println(" :: ")
             fingerDipIndices.forEachIndexed { index, i ->
+                print("[$index] ")
+                estimated4Thicknesses[index] = pixel2mmCoef*(40f)/3
                 fingerDips[2*index+0] = (handLandmarks[i].x*width).toInt()
                 fingerDips[2*index+1] = (handLandmarks[i].y*height).toInt()
                 fingerDirs[2*index+0] = (handLandmarks[i+1].x - handLandmarks[i].x)*width
@@ -104,6 +116,7 @@ class FingerDipDetection(
                 // find crop roi (center = fingerDipCor, size = CropSize)
                 val cropCenterX = fingerDips[2*index+0]
                 val cropCenterY = fingerDips[2*index+1]
+                println("x: $cropCenterX y: $cropCenterY ")
                 val dirW = fingerDirs[2*index+0]
                 val dirH = fingerDirs[2*index+1]
                 // assuming crop shape is square
@@ -118,10 +131,19 @@ class FingerDipDetection(
                 shoelace(croppedSubmat,dMagnitude,dstX,dstY)
                 // TODO: add correction layer that returns thickness in pixel
                 // temporarily implemented as mean
-                estimated4Thicknesses[i] = pixel2mmCoef*dstY.sum()/dstY.size
-                println("[$i] x: $cropCenterX y: $cropCenterY thickness: ${estimated4Thicknesses[i]}")
+                println("dstY size: ${dstY.size}")
+                var dstYsum = 0f
+                dstY.forEach { dstYsum += it }
+                println("dstYsum: $dstYsum, dstYmean: ${dstYsum/dstY.size} thc mean: ${pixel2mmCoef*dstYsum/dstY.size}")
+                println("dummy e4T: ${estimated4Thicknesses[index]}")
+                estimated4Thicknesses[index] = pixel2mmCoef*dstYsum/dstY.size
+                println("real e4T: ${estimated4Thicknesses[index]}")
+                // Log.i("FDD","[$index] x: $cropCenterX y: $cropCenterY thickness: ${estimated4Thicknesses[i]}")
             }
-
+            // I have no idea with this log ->
+            // D/CompatibilityChangeReporter: Compat change id reported: 147798919; UID 10277; state: ENABLED
+            // without the println below, this pops out before above loop even finishes, then interrupts the loop
+            println(" :: ")
             // TODO: start next activity with
             // estimated4Thicknesses, rgbImgBitmap
             Toast.makeText(hostContext
@@ -153,8 +175,11 @@ class FingerDipDetection(
             crop_dx.submat(0,c_h,1,c_w)
         )
         // simple check if using submat as dst works
-        val mml = Core.minMaxLoc(crop_dx)
-        println("crop_dx min ${mml.minVal}, max ${mml.maxVal}")
+        var mml = Core.minMaxLoc(boolImg16S)
+        println("boolimg min ${mml.minVal} (=0), max ${mml.maxVal} (=1)")
+        mml = Core.minMaxLoc(crop_dx.submat(0,c_h,1,c_w))
+        println("crop_dx min ${mml.minVal} (=-1), max ${mml.maxVal} (=1)")
+
 
         Core.multiply(xv,crop_dx,xvdx)
         var leftEdgeX = Array<Int>(c_h){
@@ -172,6 +197,9 @@ class FingerDipDetection(
 
         val d_c_h = Array<Float>(c_h){0f} // distances(thickness) array of size c_h(before norm)
         val local_d = Array<Float>(2){0f}
+
+        println("shoelace start")
+
         // algorithm that goes back and forth between left and right edge
         var p0_y = 0
         var p1_y = 0
@@ -209,6 +237,7 @@ class FingerDipDetection(
             p1_y = tp
         }
         // TODO: smooth the outliers such as thickness == 0
+        println("skip smoothing")
 
         // y and thickness normed y-wise by dir magnitude
         for (i in dstX.indices){
@@ -225,5 +254,6 @@ class FingerDipDetection(
                 dstY[i] = d_c_h[c_h-1]
             }
         }
+        println("shoelace done")
     }
 }

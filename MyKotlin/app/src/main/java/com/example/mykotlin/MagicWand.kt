@@ -1,7 +1,9 @@
 package com.example.mykotlin
 
+import android.util.Log
 import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
+import kotlin.math.max
 
 class MagicWand(s:Size) {
     private val width:Int
@@ -34,7 +36,10 @@ class MagicWand(s:Size) {
 
         println(channels.size)
         // assert 3 channel
-        assert(channels.size == 3)
+        if (channels.size < 3){
+            Log.e("MagicWand","channel size ${channels.size} < 3")
+            return
+        }
         // put max of channels at maxImg
         Core.max(channels[0],channels[1], maxImg)
         Core.max(channels[2],maxImg, maxImg)
@@ -43,6 +48,8 @@ class MagicWand(s:Size) {
         Core.min(channels[0],channels[2], channels[0])
         // maxImg - minImg
         Core.subtract(maxImg,channels[0],maxImg)
+        val mml = Core.minMaxLoc(maxImg)
+        Log.i("MagicWand", "maxImg-minImg min: ${mml.minVal}, max: ${mml.maxVal}, tol: $tol")
         Core.compare(maxImg, Scalar(tol.toDouble()), boolImg8U, Core.CMP_LT) // true=255 false=0
         Core.divide(boolImg8U, Scalar(255.0),dst,1.0,CvType.CV_16SC1)
     }

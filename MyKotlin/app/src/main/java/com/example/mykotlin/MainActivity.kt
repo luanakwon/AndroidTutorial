@@ -479,7 +479,7 @@ class MainActivity : AppCompatActivity(){
             toggleRepeatedCardDetection = true
             repeatedCaptureRequestHandler.post(object: Runnable{
                 override fun run() {
-                    Log.i("RCAPHANDLER", "act: $toggleRepeatedCardDetection occ: $captureSessionOccupied")
+                    //Log.i("RCAPHANDLER", "act: $toggleRepeatedCardDetection occ: $captureSessionOccupied")
                     if (toggleRepeatedCardDetection){
                         if(captureSessionOccupied == 0) { // no occupation
                             captureSessionOccupied = 10000 // block ( wait for 10000s)
