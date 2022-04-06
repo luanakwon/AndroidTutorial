@@ -1,9 +1,11 @@
 package com.example.mykotlin
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.util.Log
 import android.widget.Toast
+import androidx.core.content.ContextCompat.startActivity
 import com.google.mediapipe.formats.proto.LandmarkProto
 import com.google.mediapipe.solutioncore.ResultListener
 import com.google.mediapipe.solutions.hands.HandLandmark
@@ -96,15 +98,6 @@ class FingerDipDetection(
             println("hand landmarks size: ${handLandmarks.size}")
             val estimated4Thicknesses = FloatArray(4){0f}
 
-//            for (i in 0..3){
-//                print("[$i], ${fingerDipIndices[i]}")
-//            }
-//            println(" :: ")
-//
-//            fingerDipIndices.forEachIndexed { index, i ->
-//                print("[$index] ")
-//            }
-//            println(" :: ")
             fingerDipIndices.forEachIndexed { index, i ->
                 print("[$index] ")
                 estimated4Thicknesses[index] = pixel2mmCoef*(40f)/3
@@ -146,9 +139,16 @@ class FingerDipDetection(
             println(" :: ")
             // TODO: start next activity with
             // estimated4Thicknesses, rgbImgBitmap
-            Toast.makeText(hostContext
-                ,"${estimated4Thicknesses[0]} ${estimated4Thicknesses[1]} ${estimated4Thicknesses[2]} ${estimated4Thicknesses[3]} "
-                ,Toast.LENGTH_SHORT).show()
+            Intent(hostContext,MainActivity2::class.java).also{
+                it.putExtra("EXTRA_ESTIMATED4THICKNESSES",estimated4Thicknesses)
+                it.putExtra("EXTRA_RGBMATADDR",rgbImg.nativeObjAddr)
+                print("Intent also")
+                hostContext.startActivity(it)
+            }
+            println(" :::: ")
+//            Toast.makeText(hostContext
+//                ,"${estimated4Thicknesses[0]} ${estimated4Thicknesses[1]} ${estimated4Thicknesses[2]} ${estimated4Thicknesses[3]} "
+//                ,Toast.LENGTH_SHORT).show()
         }
     }
     fun runDetection(img:Bitmap){ // assuming bitmap is not null
@@ -204,6 +204,8 @@ class FingerDipDetection(
         var p0_y = 0
         var p1_y = 0
         while (true){
+            print("\r $p0_y")
+            if (p0_y >= leftEdgeX.size) {break}
             val p0_x = leftEdgeX[p0_y]
             var isInEdge = false
             for (i in local_d.indices){
@@ -237,6 +239,7 @@ class FingerDipDetection(
             p1_y = tp
         }
         // TODO: smooth the outliers such as thickness == 0
+        println()
         println("skip smoothing")
 
         // y and thickness normed y-wise by dir magnitude

@@ -2,11 +2,11 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/parentCTLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
-    android:id="@+id/parentCTLayout"
-    android:background="@color/black">
+    android:background="@color/black"
+    tools:context=".MainActivity">
 
     <TextureView
         android:id="@+id/textureView"
@@ -17,7 +17,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.26"/>
+        app:layout_constraintVertical_bias="0.26" />
 
 
     <Button
@@ -27,7 +27,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/textureView"/>
+        app:layout_constraintTop_toBottomOf="@id/textureView" />
 
     <ImageView
         android:id="@+id/thumbnail"
@@ -44,11 +44,11 @@
         android:id="@+id/space"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="@+id/textureView"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toBottomOf="@+id/textureView" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <ImageView
         android:id="@+id/imageView2"
@@ -64,10 +64,10 @@
         app:srcCompat="@drawable/ic_launcher_background" />
 
     <ImageView
-        android:visibility="visible"
         android:id="@+id/imageView3"
         android:layout_width="5dp"
         android:layout_height="5dp"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="@+id/space"
         app:layout_constraintEnd_toEndOf="@+id/space"
         app:layout_constraintHorizontal_bias="0.18286"
@@ -77,10 +77,10 @@
         app:srcCompat="@drawable/ic_launcher_background" />
 
     <ImageView
-        android:visibility="visible"
         android:id="@+id/imageView4"
         android:layout_width="5dp"
         android:layout_height="5dp"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="@+id/space"
         app:layout_constraintEnd_toEndOf="@+id/space"
         app:layout_constraintHorizontal_bias="0.18286"
@@ -90,10 +90,10 @@
         app:srcCompat="@drawable/ic_launcher_background" />
 
     <ImageView
-        android:visibility="visible"
         android:id="@+id/imageView5"
         android:layout_width="5dp"
         android:layout_height="5dp"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="@+id/space"
         app:layout_constraintEnd_toEndOf="@+id/space"
         app:layout_constraintHorizontal_bias="0.81714"
@@ -102,5 +102,15 @@
         app:layout_constraintVertical_bias="0.4"
         app:srcCompat="@drawable/ic_launcher_background" />
 
+
+    <Button
+        android:id="@+id/startActivityBtn"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

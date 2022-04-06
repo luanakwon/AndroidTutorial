@@ -5,6 +5,7 @@ import android.util.Log
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -76,7 +77,7 @@ class MainActivity : AppCompatActivity(){
     private lateinit var rgbImg: Mat
 
     private var captureSessionOccupied: Int = 0 // if >10000 blocked || if <3 delayed
-    private var connectCameraFirstCall: Boolean = true
+    private var cameraConnected: Boolean = false
     private var numBackgroundThreads: Int = 0
     private var successfulCardDetectionCounter: Int = 0
     private var lastNormalizedArea: Float = 0f
@@ -148,18 +149,36 @@ class MainActivity : AppCompatActivity(){
 
         // array of point to get detected corners of card
         cornersDst = Array<Point>(4){ Point(0.0,0.0) } //TODO -> done..?
+
+
+        findViewById<Button>(R.id.startActivityBtn).setOnClickListener {
+            Intent(this@MainActivity,MainActivity2::class.java).also {
+                this@MainActivity.startActivity(it)
+            }
+        }
+
     }
 
     override fun onPause() {
         super.onPause()
         Log.i(TAG, "onPause called")
+        if (cameraConnected) {
+            cameraDevice.close()
+            cameraConnected = false
+        }
+        stopBackgroundThread()
+        toggleRepeatedCardDetection = false
     }
 
     override fun onDestroy() {
         super.onDestroy()
         Log.i(TAG, "onDestroy called")
-        cameraDevice.close()
+        if (cameraConnected) {
+            cameraDevice.close()
+            cameraConnected = false
+        }
         stopBackgroundThread()
+        toggleRepeatedCardDetection = false
     }
 
     @SuppressLint("MissingPermission")
@@ -216,8 +235,8 @@ class MainActivity : AppCompatActivity(){
 
     @SuppressLint("MissingPermission")
     private fun connectCamera(){
-        if (connectCameraFirstCall){
-            connectCameraFirstCall = false
+        if (!cameraConnected){
+            cameraConnected = true
             cameraManager.openCamera(cameraId, cameraStateCallback, backgroundHandler)
         }
     }
@@ -246,7 +265,7 @@ class MainActivity : AppCompatActivity(){
                 }
                 if (!this@MainActivity::fingerDipDetector.isInitialized){
                     fingerDipDetector = FingerDipDetection(
-                        baseContext,
+                        this@MainActivity,
                         Size((previewSize.height/5).toDouble(),(previewSize.height/5).toDouble()))
                     fingerDipDetector.setHandResultListener()
                 }
