@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.Onbleep.ringgauge">
 
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature android:name="android.hardware.camera.any" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -10,8 +14,24 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RingGauge">
         <activity
-            android:name=".MainActivity"
-            android:exported="true">
+            android:name=".ResultsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".MeasureActivity"
+            android:exported="false" />
+        <activity
+            android:name=".InformPermissionActivity"
+            android:exported="false" />
+        <activity
+            android:name=".HowToActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme.NoActionBar"/>
+        <activity
+            android:name=".FirstActivity"
+            android:exported="true"
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
