@@ -1,19 +1,62 @@
 package com.Onbleep.ringgauge
 
 import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
+import android.widget.Button
+import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 
 class InformPermissionActivity : AppCompatActivity() {
+
     companion object {
-        private const val TAG = "InformPermissionActivity:"
-        private const val REQUEST_CODE_PERMISSION = 1001
-        private val REQUIRED_PERMISSION = arrayOf(Manifest.permission.CAMERA)
+        private val TAG = "InformPermissionActivity"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_inform_permission)
 
+        if (allPermissionsGranted()){
+            val myIntent = Intent(this, MeasureActivity::class.java)
+            startActivity(myIntent)
+        }
+
+        findViewById<Button>(R.id.reqPermBtn).setOnClickListener {
+            ActivityCompat.requestPermissions(
+                this,
+                MeasureActivity.REQUIRED_PERMISSION,
+                MeasureActivity.REQUEST_CODE_PERMISSION
+            )
+        }
+    }
+
+    private fun allPermissionsGranted() = MeasureActivity.REQUIRED_PERMISSION.all{
+        ContextCompat.checkSelfPermission(
+            baseContext, it) == PackageManager.PERMISSION_GRANTED
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        // Idk but once I remove this super it gives me an error
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if(requestCode == MeasureActivity.REQUEST_CODE_PERMISSION){
+            if (allPermissionsGranted()){
+                Log.i(TAG, "(onReqPerm) Permissions granted")
+                val myIntent = Intent(this, MeasureActivity::class.java)
+                startActivity(myIntent)
+            } else {
+                Toast.makeText(
+                    this, "Permissions denied by the user", Toast.LENGTH_SHORT).show()
+                //this.finish()
+            }
+        }
     }
 }
