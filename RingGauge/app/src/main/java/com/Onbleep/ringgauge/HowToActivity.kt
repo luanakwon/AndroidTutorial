@@ -14,7 +14,7 @@ class HowToActivity : AppCompatActivity() {
 
         val v: VideoView = findViewById(R.id.videoView)
         // TODO: change video
-        v.setVideoPath("android.resource://com.Onbleep.RingGauge/"+R.raw.testvid)
+        v.setVideoPath("android.resource://com.Onbleep.ringgauge/"+R.raw.testvid)
         v.start()
 
         findViewById<Button>(R.id.skipBtn).setOnClickListener {
