@@ -1,4 +1,4 @@
-package com.Onbleep.ringgauge
+package com.onbleep.ringgauge
 
 import org.junit.Test
 

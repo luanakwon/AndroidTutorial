@@ -1,4 +1,4 @@
-package com.Onbleep.ringgauge
+package com.onbleep.ringgauge
 
 import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
@@ -230,7 +230,7 @@ class MeasureActivity : AppCompatActivity() {
                         mk.ndarray(mk[previewSize.height/2,previewSize.width - previewSize.height*4/10]),
                         mk.ndarray(mk[previewSize.height/2,previewSize.width - previewSize.height*6/10]),p_w)
                 }
-                if (!this@MainActivity::fingerDipDetector.isInitialized){
+                if (!this@MeasureActivity::fingerDipDetector.isInitialized){
                     fingerDipDetector = FingerDipDetection(
                         this@MeasureActivity,
                         Size((previewSize.height/5).toDouble(),(previewSize.height/5).toDouble()))
@@ -447,5 +447,33 @@ class MeasureActivity : AppCompatActivity() {
         backgroundHandlerThread.join()
     }
 
-
+    /* request preview snapshot.
+    * temporary implementation invoked by Capture button
+    * operation on the captured image will be time consuming,
+    * so a flag is used to ensure this is done one at a time.
+    * Occupation should be freed at the end of operation
+    * TODO: make this request automatic  */
+    private fun captureSurface(){
+        if (!toggleRepeatedCardDetection){
+            toggleRepeatedCardDetection = true
+            repeatedCaptureRequestHandler.post(object: Runnable{
+                override fun run() {
+                    //Log.i("RCAPHANDLER", "act: $toggleRepeatedCardDetection occ: $captureSessionOccupied")
+                    if (toggleRepeatedCardDetection){
+                        if(captureSessionOccupied == 0) { // no occupation
+                            captureSessionOccupied = 10000 // block ( wait for 10000s)
+                            captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE)
+                            captureRequestBuilder.addTarget(imageReader.surface)
+                            cameraCaptureSession.capture(captureRequestBuilder.build(), captureCallback, null)
+                        } else {
+                            captureSessionOccupied -= 1 // wait once more
+                        }
+                        repeatedCaptureRequestHandler.postDelayed(this,1000)
+                    }
+                }
+            })
+        } else {
+            toggleRepeatedCardDetection = false
+        }
+    }
 }

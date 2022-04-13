@@ -7,7 +7,7 @@ android {
     compileSdk 31
 
     defaultConfig {
-        applicationId "com.Onbleep.ringgauge"
+        applicationId 'com.onbleep.ringgauge'
         minSdk 24
         targetSdk 32
         versionCode 1
@@ -46,7 +46,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
     implementation "org.jetbrains.kotlinx:multik-api:0.1.1"
-    implementation "org.jetbrains.kotlinx:multik-api:0.1.1"
+    implementation "org.jetbrains.kotlinx:multik-jvm:0.1.1"
 
     implementation 'com.google.mediapipe:solution-core:latest.release'
     implementation 'com.google.mediapipe:hands:latest.release'
