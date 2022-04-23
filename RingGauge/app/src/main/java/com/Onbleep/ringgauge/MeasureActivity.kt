@@ -17,6 +17,7 @@ import android.hardware.camera2.params.SessionConfiguration
 import android.media.Image
 import android.media.ImageReader
 import android.os.*
+import android.provider.ContactsContract
 import android.util.Size
 import android.view.Surface
 import android.view.TextureView
@@ -82,6 +83,8 @@ class MeasureActivity : AppCompatActivity() {
 
     private val repeatedCaptureRequestHandler: Handler = Handler(Looper.getMainLooper())
     private val p_w = 0.25f
+    private val cardCenterC = 0.4f
+    private val cardShortC = 0.55f
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSION.all{
         ContextCompat.checkSelfPermission(
@@ -123,6 +126,20 @@ class MeasureActivity : AppCompatActivity() {
                 this@MeasureActivity.startActivity(it)
             }
         }
+
+        val pLayout: ConstraintLayout = findViewById(R.id.parentCTLayout)
+        val set = ConstraintSet()
+        set.clone(pLayout)
+        set.setVerticalBias(R.id.cornerTL,1-cardShortC)
+        set.setVerticalBias(R.id.cornerTR,1-(cardCenterC-(cardShortC-cardCenterC)))
+        set.setVerticalBias(R.id.cornerBL,1-cardShortC)
+        set.setVerticalBias(R.id.cornerBR,1-(cardCenterC-(cardShortC-cardCenterC)))
+        set.setHorizontalBias(R.id.cornerTL,0.5f+(cardShortC-cardCenterC)*1.5857f)
+        set.setHorizontalBias(R.id.cornerTR,0.5f+(cardShortC-cardCenterC)*1.5857f)
+        set.setHorizontalBias(R.id.cornerBL,0.5f-(cardShortC-cardCenterC)*1.5857f)
+        set.setHorizontalBias(R.id.cornerBR,0.5f-(cardShortC-cardCenterC)*1.5857f)
+        set.applyTo(pLayout)
+
     }
 
     override fun onPause() {
@@ -165,8 +182,8 @@ class MeasureActivity : AppCompatActivity() {
             if (!this::cardDetector.isInitialized){
                 // initialize card detector (h,w order)
                 cardDetector = CardDetector(
-                    mk.ndarray(mk[previewSize.height*500/960,previewSize.height*350/960]),
-                    mk.ndarray(mk[previewSize.height*470/960,previewSize.height*510/960]),p_w)
+                    mk.ndarray(mk[previewSize.height/2,previewSize.width - (previewSize.height*cardCenterC).toInt()]),
+                    mk.ndarray(mk[previewSize.height/2,previewSize.width - (previewSize.height*cardShortC).toInt()]),p_w)
             }
             if (!this::fingerDipDetector.isInitialized){
                 fingerDipDetector = FingerDipDetection(
@@ -227,8 +244,8 @@ class MeasureActivity : AppCompatActivity() {
                 if (!this@MeasureActivity::cardDetector.isInitialized){
                     // initialize card detector (h,w order)
                     cardDetector = CardDetector(
-                        mk.ndarray(mk[previewSize.height/2,previewSize.width - previewSize.height*4/10]),
-                        mk.ndarray(mk[previewSize.height/2,previewSize.width - previewSize.height*6/10]),p_w)
+                        mk.ndarray(mk[previewSize.height/2,previewSize.width - (previewSize.height*cardCenterC).toInt()]),
+                        mk.ndarray(mk[previewSize.height/2,previewSize.width - (previewSize.height*cardShortC).toInt()]),p_w)
                 }
                 if (!this@MeasureActivity::fingerDipDetector.isInitialized){
                     fingerDipDetector = FingerDipDetection(
@@ -474,6 +491,17 @@ class MeasureActivity : AppCompatActivity() {
             })
         } else {
             toggleRepeatedCardDetection = false
+        }
+    }
+    var mBackWait: Long = 0
+    override fun onBackPressed() {
+        if (System.currentTimeMillis() - mBackWait >= 2000){
+            mBackWait = System.currentTimeMillis()
+            Toast.makeText(
+                this, "뒤로가기 버튼을 한번 더 누르면 종료됩니다.", Toast.LENGTH_SHORT)
+                .show()
+        } else {
+            finishAffinity()
         }
     }
 }

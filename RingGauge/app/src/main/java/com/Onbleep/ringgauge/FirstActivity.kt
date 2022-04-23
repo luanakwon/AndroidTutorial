@@ -21,8 +21,8 @@ class FirstActivity : AppCompatActivity() {
         private const val DURATION: Long = 3000
     }
     // Is this necessary?
-    override fun onBackPressed(){
-        super.onBackPressed()
-    }
+//    override fun onBackPressed(){
+//        super.onBackPressed()
+//    }
 
 }
