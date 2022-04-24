@@ -115,8 +115,9 @@ class MeasureActivity : AppCompatActivity() {
             findViewById(R.id.cornerBR)
         )
 
+        // deprecated. autocapture begins at onResume
         // capture btn onClickListener
-        findViewById<Button>(R.id.captureBtn).setOnClickListener {captureSurface()}
+        // findViewById<Button>(R.id.captureBtn).setOnClickListener {captureSurface()}
 
         // start cameraVideoThread
         if (numBackgroundThreads == 0) startBackgroundThread()
@@ -201,6 +202,10 @@ class MeasureActivity : AppCompatActivity() {
             Log.i(TAG,"onResume ${previewSize.width} ${previewSize.height}")
         } else {
             textureView.surfaceTextureListener = surfaceTextureListener
+        }
+        // Resume Autocapture
+        if (!toggleRepeatedCardDetection){
+            captureSurface()
         }
     }
 
@@ -454,7 +459,6 @@ class MeasureActivity : AppCompatActivity() {
                 fingerDipDetector.setRGBImg(rgbImg)
                 fingerDipDetector.setPixel2mm(pixel2mm)
                 fingerDipDetector.runDetection(rgbImgBitmap)
-
 
                 captureSessionOccupied = 5 // delay free occupation
                 successfulCardDetectionCounter = 0
