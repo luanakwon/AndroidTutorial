@@ -73,6 +73,7 @@ class MeasureActivity : AppCompatActivity() {
 
     private lateinit var grImg: Mat
     private lateinit var rgbImg: Mat
+    private lateinit var cornerGuides: Array<ImageView>
 
     private var captureSessionOccupied: Int = 0 // if >10000 blocked || if <3 delayed
     private var cameraConnected: Boolean = false
@@ -107,6 +108,12 @@ class MeasureActivity : AppCompatActivity() {
         textureView = findViewById(R.id.textureView)
         cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
         imageView = findViewById(R.id.thumbnail)
+        cornerGuides = arrayOf(
+            findViewById(R.id.cornerTL),
+            findViewById(R.id.cornerTR),
+            findViewById(R.id.cornerBL),
+            findViewById(R.id.cornerBR)
+        )
 
         // capture btn onClickListener
         findViewById<Button>(R.id.captureBtn).setOnClickListener {captureSurface()}
@@ -404,9 +411,10 @@ class MeasureActivity : AppCompatActivity() {
             Log.i(TAG, "rst3: ${cornersDst[3].x}, ${cornersDst[3].y}")
 
             if (pointsFound){
+                // steadiness threshold
                 val newNormalizedArea = cardDetector.getDetectedAreaApprox()/cardDetector.getCardGuideArea()
                 Log.i(TAG, "last norm area : $lastNormalizedArea")
-                if (abs(lastNormalizedArea - newNormalizedArea) < 0.05 ){
+                if (abs(lastNormalizedArea - newNormalizedArea) < 0.1 ){
                     Log.i(TAG, "new normalized area $newNormalizedArea")
                     successfulCardDetectionCounter+=1
                 } else {successfulCardDetectionCounter = 0}
@@ -414,6 +422,12 @@ class MeasureActivity : AppCompatActivity() {
             } else {successfulCardDetectionCounter = 0}
 
             Log.i(TAG, "Successful detections $successfulCardDetectionCounter")
+            //TODO change corner guide opacity to indicate (un)successful detection
+            val cornerOpacity = if (successfulCardDetectionCounter == 0) 0.5f else 1f
+            for (item in cornerGuides) {
+                item.alpha = cornerOpacity
+            }
+
 
             // if had enough successful card Detection, use last picture to do hand detection
             if (successfulCardDetectionCounter > 4) {
