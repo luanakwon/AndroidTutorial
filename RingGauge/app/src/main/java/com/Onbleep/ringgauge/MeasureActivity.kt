@@ -203,10 +203,7 @@ class MeasureActivity : AppCompatActivity() {
         } else {
             textureView.surfaceTextureListener = surfaceTextureListener
         }
-        // Resume Autocapture
-        if (!toggleRepeatedCardDetection){
-            captureSurface()
-        }
+
     }
 
     private fun setupCamera(){
@@ -343,6 +340,10 @@ class MeasureActivity : AppCompatActivity() {
                 cameraCaptureSession.setRepeatingRequest(
                     captureRequestBuilder.build(), null, backgroundHandler
                 )
+                // Resume Autocapture
+                if (!toggleRepeatedCardDetection){
+                    captureSurface()
+                }
             } catch(e: Exception) {
                 e.printStackTrace()
             }

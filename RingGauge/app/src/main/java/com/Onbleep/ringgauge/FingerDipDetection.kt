@@ -29,10 +29,10 @@ class FingerDipDetection(
         .build()
     private val hands = Hands(context,handsOptions)
     private val fingerDipIndices = intArrayOf(
-        HandLandmark.INDEX_FINGER_DIP,
-        HandLandmark.MIDDLE_FINGER_DIP,
-        HandLandmark.RING_FINGER_DIP,
-        HandLandmark.PINKY_DIP
+        HandLandmark.INDEX_FINGER_PIP,
+        HandLandmark.MIDDLE_FINGER_PIP,
+        HandLandmark.RING_FINGER_PIP,
+        HandLandmark.PINKY_PIP
     )
 
     private val hostContext: Context
@@ -87,6 +87,7 @@ class FingerDipDetection(
             // hand(s) found
             val width = result.inputBitmap().width
             val height = result.inputBitmap().height
+            println("width: $width, height: $height")
             val handLandmarks = result.multiHandLandmarks()[0].landmarkList
             val fingerDips = IntArray(4*2){0} // four dips, xy each
             val fingerDirs = FloatArray(4*2){0f} // same
@@ -106,10 +107,16 @@ class FingerDipDetection(
                 val cropCenterX = fingerDips[2*index+0]
                 val cropCenterY = fingerDips[2*index+1]
                 println("x: $cropCenterX y: $cropCenterY ")
+                println("_x: ${handLandmarks[i].x} _y: ${handLandmarks[i].y}")
                 val dirW = fingerDirs[2*index+0]
                 val dirH = fingerDirs[2*index+1]
                 // assuming crop shape is square
                 val dRadius = (cropSize.width/2).toInt()
+                println("dR: ${dRadius} rs: ${cropCenterY-dRadius} re: ${cropCenterY+dRadius} cs: ${cropCenterX-dRadius} ce: ${cropCenterX+dRadius}")
+                if (!(0 <= cropCenterY-dRadius && cropCenterY+dRadius < height && 0 <= cropCenterX-dRadius && cropCenterX+dRadius < width)){
+                    Log.e("FDD", "Crop out of range")
+                    return
+                }
                 val croppedSubmat = rgbImg.submat(
                     cropCenterY - dRadius, cropCenterY + dRadius,
                     cropCenterX - dRadius, cropCenterX + dRadius)
