@@ -17,9 +17,12 @@ class InformPermissionActivity : AppCompatActivity() {
         private val TAG = "InformPermissionActivity"
     }
 
+    private var alreadyCreated: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_inform_permission)
+        alreadyCreated = true
 
         if (allPermissionsGranted()){
             val myIntent = Intent(this, MeasureActivity::class.java)
@@ -68,6 +71,14 @@ class InformPermissionActivity : AppCompatActivity() {
                 .show()
         } else {
             finishAffinity()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (alreadyCreated && allPermissionsGranted()){
+            val myIntent = Intent(this, MeasureActivity::class.java)
+            startActivity(myIntent)
         }
     }
 }

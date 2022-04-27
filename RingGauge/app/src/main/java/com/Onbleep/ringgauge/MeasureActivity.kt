@@ -86,6 +86,12 @@ class MeasureActivity : AppCompatActivity() {
     private val p_w = 0.25f
     private val cardCenterC = 0.4f
     private val cardShortC = 0.55f
+    private val requiredSuccessfulCardDetection: Int = 3
+    private val captureRequestDelay: Long = 700 // in ms
+
+    // some Fatal signal after onResume call.
+    // restrict onResume only right after onCreate
+    private var onCreateCalled: Boolean = false //
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSION.all{
         ContextCompat.checkSelfPermission(
@@ -93,6 +99,8 @@ class MeasureActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        Log.i(TAG, "onoCreate")
+        onCreateCalled = true
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_measure)
         // double check if permissions are granted
@@ -153,6 +161,7 @@ class MeasureActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         Log.i(TAG, "onPause called")
+        onCreateCalled = false
         if (cameraConnected) {
             cameraDevice.close()
             cameraConnected = false
@@ -164,6 +173,7 @@ class MeasureActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         Log.i(TAG, "onDestroy called")
+        onCreateCalled = false
         if (cameraConnected) {
             cameraDevice.close()
             cameraConnected = false
@@ -175,6 +185,10 @@ class MeasureActivity : AppCompatActivity() {
     @SuppressLint("MissingPermission")
     override fun onResume() {
         super.onResume()
+        // onResume call after onPause/onDestroy/childActivity
+        if (!onCreateCalled){
+            this.finish()
+        }
         if(numBackgroundThreads == 0) startBackgroundThread() // still not sure if i have to check the existence
         // Resume Opencv
         if(!OpenCVLoader.initDebug()){
@@ -188,12 +202,14 @@ class MeasureActivity : AppCompatActivity() {
             connectCamera()
             setTextureViewRatio()
             if (!this::cardDetector.isInitialized){
+                Log.i(TAG, "initializing card detector")
                 // initialize card detector (h,w order)
                 cardDetector = CardDetector(
                     mk.ndarray(mk[previewSize.height/2,previewSize.width - (previewSize.height*cardCenterC).toInt()]),
                     mk.ndarray(mk[previewSize.height/2,previewSize.width - (previewSize.height*cardShortC).toInt()]),p_w)
             }
             if (!this::fingerDipDetector.isInitialized){
+                Log.i(TAG, "initializing Finger dip det")
                 fingerDipDetector = FingerDipDetection(
                     this,
                     Size((previewSize.height/5).toDouble(),(previewSize.height/5).toDouble()))
@@ -228,6 +244,7 @@ class MeasureActivity : AppCompatActivity() {
 
     @SuppressLint("MissingPermission")
     private fun connectCamera(){
+        println("Is cam connected: $cameraConnected")
         if (!cameraConnected){
             cameraConnected = true
             cameraManager.openCamera(cameraId, cameraStateCallback, backgroundHandler)
@@ -436,7 +453,7 @@ class MeasureActivity : AppCompatActivity() {
 
 
             // if had enough successful card Detection, use last picture to do hand detection
-            if (successfulCardDetectionCounter > 4) {
+            if (successfulCardDetectionCounter > requiredSuccessfulCardDetection) {
                 val cornersDstMat = Mat(4, 2, CvType.CV_32FC1)
                 for (i in 0..3) {
                     cornersDstMat.put(i, 0, cornersDst[i].x)
@@ -497,14 +514,14 @@ class MeasureActivity : AppCompatActivity() {
                     //Log.i("RCAPHANDLER", "act: $toggleRepeatedCardDetection occ: $captureSessionOccupied")
                     if (toggleRepeatedCardDetection){
                         if(captureSessionOccupied == 0) { // no occupation
-                            captureSessionOccupied = 10000 // block ( wait for 10000s)
+                            captureSessionOccupied = 10000 // block ( wait for 10000*captureRequestDelay ms)
                             captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE)
                             captureRequestBuilder.addTarget(imageReader.surface)
                             cameraCaptureSession.capture(captureRequestBuilder.build(), captureCallback, null)
                         } else {
                             captureSessionOccupied -= 1 // wait once more
                         }
-                        repeatedCaptureRequestHandler.postDelayed(this,1000)
+                        repeatedCaptureRequestHandler.postDelayed(this,captureRequestDelay)
                     }
                 }
             })

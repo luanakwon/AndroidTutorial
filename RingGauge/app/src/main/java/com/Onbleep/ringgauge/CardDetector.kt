@@ -85,7 +85,7 @@ class CardDetector(center: D1Array<Int>, short_p: D1Array<Int>, val p_w: Float) 
         corners = Mat(3,4,M_out2in.type())
         corners_col2 = Mat(3,4,corners.type())
 
-        linRegThresConst = 4500f
+        linRegThresConst = 4000f
         val xv = Mat(pedge_s.width()*pedge_s.height(),1,CvType.CV_32FC1)
         val yv = Mat(pedge_s.width()*pedge_s.height(),1,CvType.CV_32FC1)
 
