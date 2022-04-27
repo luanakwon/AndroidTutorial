@@ -132,7 +132,13 @@ class FingerDipDetection(
                 dstY.forEach { dstYsum += it }
                 println("dstYsum: $dstYsum, dstYmean: ${dstYsum/dstY.size} thc mean: ${pixel2mmCoef*dstYsum/dstY.size}")
                 println("dummy e4T: ${estimated4Thicknesses[index]}")
-                estimated4Thicknesses[index] = pixel2mmCoef*dstYsum/dstY.size
+                //estimated4Thicknesses[index] = pixel2mmCoef*dstYsum/dstY.size // mean
+                estimated4Thicknesses[index] = pixel2mmCoef*dstY.maxOf { it } // max
+                print("dstY :")
+                for(i in dstY){
+                    print(" $i")
+                }
+                println()
                 println("real e4T: ${estimated4Thicknesses[index]}")
                 // Log.i("FDD","[$index] x: $cropCenterX y: $cropCenterY thickness: ${estimated4Thicknesses[i]}")
             }
@@ -204,7 +210,7 @@ class FingerDipDetection(
         var p0_y = 0
         var p1_y = 0
         while (true){
-            print("\r $p0_y")
+            print(" $p0_y")
             if (p0_y >= leftEdgeX.size) {break}
             val p0_x = leftEdgeX[p0_y]
             var isInEdge = false

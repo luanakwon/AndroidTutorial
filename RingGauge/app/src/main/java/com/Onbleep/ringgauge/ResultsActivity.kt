@@ -46,7 +46,7 @@ class ResultsActivity : AppCompatActivity() {
             openTableBtn.visibility = View.INVISIBLE
         }
         findViewById<Button>(R.id.button5).setOnClickListener {
-            super.onBackPressed()
+            this@ResultsActivity.finish()
         }
     }
 
