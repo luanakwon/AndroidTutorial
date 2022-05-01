@@ -19,8 +19,7 @@ import android.media.ImageReader
 import android.os.*
 import android.provider.ContactsContract
 import android.util.Size
-import android.view.Surface
-import android.view.TextureView
+import android.view.*
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
@@ -74,6 +73,8 @@ class MeasureActivity : AppCompatActivity() {
     private lateinit var grImg: Mat
     private lateinit var rgbImg: Mat
     private lateinit var cornerGuides: Array<ImageView>
+    private lateinit var pLayout: ConstraintLayout
+
 
     private var captureSessionOccupied: Int = 0 // if >10000 blocked || if <3 delayed
     private var cameraConnected: Boolean = false
@@ -85,7 +86,7 @@ class MeasureActivity : AppCompatActivity() {
     private val repeatedCaptureRequestHandler: Handler = Handler(Looper.getMainLooper())
     private val p_w = 0.25f
     private val cardCenterC = 0.4f
-    private val cardShortC = 0.55f
+    private val cardShortC = 0.15f
     private val requiredSuccessfulCardDetection: Int = 3
     private val captureRequestDelay: Long = 700 // in ms
 
@@ -98,6 +99,7 @@ class MeasureActivity : AppCompatActivity() {
             baseContext, it) == PackageManager.PERMISSION_GRANTED
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.i(TAG, "onoCreate")
         onCreateCalled = true
@@ -122,6 +124,7 @@ class MeasureActivity : AppCompatActivity() {
             findViewById(R.id.cornerBL),
             findViewById(R.id.cornerBR)
         )
+        pLayout = findViewById(R.id.parentCTLayout)
 
         // deprecated. autocapture begins at onResume
         // capture btn onClickListener
@@ -143,17 +146,42 @@ class MeasureActivity : AppCompatActivity() {
             }
         }
 
-        val pLayout: ConstraintLayout = findViewById(R.id.parentCTLayout)
+        // This "MeasureActivity" is portrait, but it is made to look like landscape.
+        textureView.setOnTouchListener(object: OnSwipeTouchListener(this@MeasureActivity){
+            override fun onSwipeUp(){ // ..? still don't get it, why is this down
+                Log.i(TAG, "Swipe Right")
+                val set = ConstraintSet()
+                set.clone(pLayout)
+                set.setVerticalBias(R.id.space_center,1f)
+                set.applyTo(pLayout)
+                cardDetector.leftMode = false
+                fingerDipDetector.leftMode = false
+            }
+            override fun onSwipeDown() { // ..? and why is this up
+                Log.i(TAG, "Swipe Left")
+                val set = ConstraintSet()
+                set.clone(pLayout)
+                set.setVerticalBias(R.id.space_center, 0f)
+                set.applyTo(pLayout)
+                cardDetector.leftMode = true
+                fingerDipDetector.leftMode = true
+            }
+        })
+
+        //val pLayout: ConstraintLayout = findViewById(R.id.parentCTLayout)
         val set = ConstraintSet()
         set.clone(pLayout)
-        set.setVerticalBias(R.id.cornerTL,1-cardShortC)
-        set.setVerticalBias(R.id.cornerTR,1-(cardCenterC-(cardShortC-cardCenterC)))
-        set.setVerticalBias(R.id.cornerBL,1-cardShortC)
-        set.setVerticalBias(R.id.cornerBR,1-(cardCenterC-(cardShortC-cardCenterC)))
-        set.setHorizontalBias(R.id.cornerTL,0.5f+(cardShortC-cardCenterC)*1.5857f)
-        set.setHorizontalBias(R.id.cornerTR,0.5f+(cardShortC-cardCenterC)*1.5857f)
-        set.setHorizontalBias(R.id.cornerBL,0.5f-(cardShortC-cardCenterC)*1.5857f)
-        set.setHorizontalBias(R.id.cornerBR,0.5f-(cardShortC-cardCenterC)*1.5857f)
+        //position card corner guide spacer
+        set.setDimensionRatio(R.id.space_center,"1:${cardCenterC*2}")
+        // position card corner guides
+        set.setVerticalBias(R.id.cornerTL,0.5f-cardShortC)
+        set.setVerticalBias(R.id.cornerTR,0.5f+cardShortC)
+        set.setVerticalBias(R.id.cornerBL,0.5f-cardShortC)
+        set.setVerticalBias(R.id.cornerBR,0.5f+cardShortC)
+        set.setHorizontalBias(R.id.cornerTL,0.5f+cardShortC*1.5857f)
+        set.setHorizontalBias(R.id.cornerTR,0.5f+cardShortC*1.5857f)
+        set.setHorizontalBias(R.id.cornerBL,0.5f-cardShortC*1.5857f)
+        set.setHorizontalBias(R.id.cornerBR,0.5f-cardShortC*1.5857f)
         set.applyTo(pLayout)
 
     }
@@ -205,8 +233,9 @@ class MeasureActivity : AppCompatActivity() {
                 Log.i(TAG, "initializing card detector")
                 // initialize card detector (h,w order)
                 cardDetector = CardDetector(
-                    mk.ndarray(mk[previewSize.height/2,previewSize.width - (previewSize.height*cardCenterC).toInt()]),
-                    mk.ndarray(mk[previewSize.height/2,previewSize.width - (previewSize.height*cardShortC).toInt()]),p_w)
+                    mk.ndarray(mk[previewSize.height/2,(previewSize.height*cardCenterC).toInt()]), //center left
+                    mk.ndarray(mk[previewSize.height/2,previewSize.width - (previewSize.height*cardCenterC).toInt()]), //center right
+                    mk.ndarray(mk[previewSize.height/2,previewSize.width - (previewSize.height*(cardShortC+cardCenterC)).toInt()]),p_w) // short p , possible window
             }
             if (!this::fingerDipDetector.isInitialized){
                 Log.i(TAG, "initializing Finger dip det")
@@ -253,7 +282,6 @@ class MeasureActivity : AppCompatActivity() {
 
     /** Change TextureView's aspect ratio to prevent stretched image */
     private fun setTextureViewRatio(){
-        val pLayout: ConstraintLayout = findViewById(R.id.parentCTLayout)
         val set = ConstraintSet()
         set.clone(pLayout)
         set.setDimensionRatio(textureView.id, "${previewSize.height}:${previewSize.width}")
@@ -270,8 +298,9 @@ class MeasureActivity : AppCompatActivity() {
                 if (!this@MeasureActivity::cardDetector.isInitialized){
                     // initialize card detector (h,w order)
                     cardDetector = CardDetector(
-                        mk.ndarray(mk[previewSize.height/2,previewSize.width - (previewSize.height*cardCenterC).toInt()]),
-                        mk.ndarray(mk[previewSize.height/2,previewSize.width - (previewSize.height*cardShortC).toInt()]),p_w)
+                        mk.ndarray(mk[previewSize.height/2,(previewSize.height*cardCenterC).toInt()]), //center left
+                        mk.ndarray(mk[previewSize.height/2,previewSize.width - (previewSize.height*cardCenterC).toInt()]), // center right
+                        mk.ndarray(mk[previewSize.height/2,previewSize.width - (previewSize.height*(cardShortC+cardCenterC)).toInt()]),p_w)
                 }
                 if (!this@MeasureActivity::fingerDipDetector.isInitialized){
                     fingerDipDetector = FingerDipDetection(
@@ -430,8 +459,8 @@ class MeasureActivity : AppCompatActivity() {
             Log.i(TAG, "Points found = $pointsFound")
             Log.i(TAG, "rst0: ${cornersDst[0].x}, ${cornersDst[0].y}")
             Log.i(TAG, "rst1: ${cornersDst[1].x}, ${cornersDst[1].y}")
-            Log.i(TAG, "rst2: ${cornersDst[2].x}, ${cornersDst[2].y}")
-            Log.i(TAG, "rst3: ${cornersDst[3].x}, ${cornersDst[3].y}")
+//            Log.i(TAG, "rst2: ${cornersDst[2].x}, ${cornersDst[2].y}")
+//            Log.i(TAG, "rst3: ${cornersDst[3].x}, ${cornersDst[3].y}")
 
             if (pointsFound){
                 // steadiness threshold
@@ -459,9 +488,13 @@ class MeasureActivity : AppCompatActivity() {
                     cornersDstMat.put(i, 0, cornersDst[i].x)
                     cornersDstMat.put(i, 1, cornersDst[i].y)
                 }
-                val M_warpToFitCard = Imgproc.getPerspectiveTransform(
-                    cornersDstMat, cardDetector.offset_in_pts
-                )
+                val M_warpToFitCard = if(cardDetector.leftMode){
+                    Imgproc.getPerspectiveTransform(
+                        cornersDstMat, cardDetector.offset_in_pts_l)
+                } else {
+                    Imgproc.getPerspectiveTransform(
+                        cornersDstMat, cardDetector.offset_in_pts_r)
+                }
                 Imgproc.warpPerspective(
                     rgbImg,
                     rgbImg,
@@ -540,4 +573,71 @@ class MeasureActivity : AppCompatActivity() {
             finishAffinity()
         }
     }
+}
+
+/** Swipe gesture listener class
+ * The swipe direction is based on activity's orientation.
+ */
+open class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
+
+    private val gestureDetector: GestureDetector
+
+    companion object {
+        private val SWIPE_THRESHOLD = 100
+        private val SWIPE_VELOCITY_THRESHOLD = 100
+    }
+
+    init {
+        gestureDetector = GestureDetector(ctx, GestureListener())
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+        return gestureDetector.onTouchEvent(event)
+    }
+
+    private inner class GestureListener : GestureDetector.SimpleOnGestureListener() {
+        override fun onDown(e: MotionEvent?): Boolean {
+            return true
+        }
+
+        override fun onFling(
+            e1: MotionEvent,
+            e2: MotionEvent,
+            velocityX: Float,
+            velocityY: Float
+        ): Boolean {
+            var result = false
+            try {
+                val diffY = e2.y - e1.y
+                val diffX = e2.x - e1.x
+                if ((Math.abs(diffX) + Math.abs(diffY) > 2*SWIPE_THRESHOLD) &&
+                    (Math.abs(velocityX) + Math.abs(velocityY) > 2* SWIPE_VELOCITY_THRESHOLD)){
+
+                    if (diffY >= diffX && diffY > -diffX){
+                        onSwipeUp()
+                    } else if (diffY < diffX && diffY >= -diffX ){
+                        onSwipeRight()
+                    } else if (diffY < diffX && diffY < -diffX){
+                        onSwipeDown()
+                    } else {
+                        onSwipeLeft()
+                    }
+                    result = true
+                } else {
+                    result = false
+                }
+            } catch (exception: Exception){
+                exception.printStackTrace()
+            }
+            return result
+        }
+    }
+    open fun onSwipeDown() {}
+
+    open fun onSwipeLeft() {}
+
+    open fun onSwipeRight() {}
+
+    open fun onSwipeUp() {}
 }

@@ -5,8 +5,11 @@ import android.media.Image
 import android.opengl.Visibility
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.*
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import org.opencv.android.Utils
 import org.opencv.core.Mat
 
@@ -18,6 +21,7 @@ class ResultsActivity : AppCompatActivity() {
         val thicknesses = intent.getFloatArrayExtra("EXTRA_ESTIMATED4THICKNESSES")
             ?: floatArrayOf(0f,0f,0f,0f)
         val matAddr = intent.getLongExtra("EXTRA_RGBMATADDR",0L)
+        val leftMode = intent.getBooleanExtra("EXTRA_LEFTMODE",false)
 
         println("MAIN2")
 
@@ -48,6 +52,24 @@ class ResultsActivity : AppCompatActivity() {
         findViewById<Button>(R.id.button5).setOnClickListener {
             this@ResultsActivity.finish()
         }
+        // change results table position
+        val pLayout: ConstraintLayout = findViewById(R.id.parentCTLayout2)
+        val set = ConstraintSet()
+        set.clone(pLayout)
+        if (leftMode) {
+            Log.i("ResultsAct","left")
+            set.clear(R.id.resultsTable,ConstraintSet.END)
+            set.connect(R.id.resultsTable,ConstraintSet.START,R.id.parentCTLayout2,ConstraintSet.START,40)
+            set.clear(R.id.openTableBtn,ConstraintSet.END)
+            set.connect(R.id.openTableBtn,ConstraintSet.START,R.id.parentCTLayout2,ConstraintSet.START,10)
+        } else {
+            Log.i("ResultsAct","right")
+            set.clear(R.id.resultsTable,ConstraintSet.START)
+            set.connect(R.id.resultsTable,ConstraintSet.END,R.id.parentCTLayout2,ConstraintSet.END,40)
+            set.clear(R.id.openTableBtn,ConstraintSet.START)
+            set.connect(R.id.openTableBtn,ConstraintSet.END,R.id.parentCTLayout2,ConstraintSet.END,10)
+        }
+        set.applyTo(pLayout)
     }
 
     fun getKSUnit(x: Float) : Int{

@@ -17,7 +17,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.26" />
+        app:layout_constraintVertical_bias="0.5" />
 
 
     <Button
@@ -27,7 +27,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/textureView" />
+        app:layout_constraintTop_toBottomOf="@id/textureView"
+        android:visibility="gone"/>
 
     <ImageView
         android:id="@+id/thumbnail"
@@ -41,25 +42,37 @@
         app:layout_constraintTop_toBottomOf="@+id/textureView" />
 
     <Space
-        android:id="@+id/space"
+        android:id="@+id/space_center"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="@+id/textureView"
+        app:layout_constraintTop_toTopOf="@id/textureView"
+        app:layout_constraintDimensionRatio="1:0.8"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintVertical_bias="1.0"/>
+
+    <Space
+        android:id="@+id/space_square"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="@+id/space_center"
+        app:layout_constraintTop_toTopOf="@id/space_center"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent" />
+
 
     <ImageView
         android:id="@+id/cornerTR"
         android:layout_width="5dp"
         android:layout_height="5dp"
         android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="@+id/space"
-        app:layout_constraintEnd_toEndOf="@+id/space"
+        app:layout_constraintBottom_toBottomOf="@+id/space_square"
+        app:layout_constraintEnd_toEndOf="@+id/space_square"
         app:layout_constraintHorizontal_bias="0.81714"
-        app:layout_constraintStart_toStartOf="@id/space"
-        app:layout_constraintTop_toTopOf="@+id/space"
+        app:layout_constraintStart_toStartOf="@+id/space_square"
+        app:layout_constraintTop_toTopOf="@+id/space_square"
         app:layout_constraintVertical_bias="0.8"
         app:srcCompat="@drawable/ic_launcher_background" />
 
@@ -68,11 +81,11 @@
         android:layout_width="5dp"
         android:layout_height="5dp"
         android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="@+id/space"
-        app:layout_constraintEnd_toEndOf="@+id/space"
+        app:layout_constraintBottom_toBottomOf="@+id/space_square"
+        app:layout_constraintEnd_toEndOf="@+id/space_square"
         app:layout_constraintHorizontal_bias="0.18286"
-        app:layout_constraintStart_toStartOf="@id/space"
-        app:layout_constraintTop_toTopOf="@+id/space"
+        app:layout_constraintStart_toStartOf="@id/space_square"
+        app:layout_constraintTop_toTopOf="@+id/space_square"
         app:layout_constraintVertical_bias="0.4"
         app:srcCompat="@drawable/ic_launcher_background" />
 
@@ -81,11 +94,11 @@
         android:layout_width="5dp"
         android:layout_height="5dp"
         android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="@+id/space"
-        app:layout_constraintEnd_toEndOf="@+id/space"
+        app:layout_constraintBottom_toBottomOf="@+id/space_square"
+        app:layout_constraintEnd_toEndOf="@+id/space_square"
         app:layout_constraintHorizontal_bias="0.18286"
-        app:layout_constraintStart_toStartOf="@id/space"
-        app:layout_constraintTop_toTopOf="@+id/space"
+        app:layout_constraintStart_toStartOf="@id/space_square"
+        app:layout_constraintTop_toTopOf="@+id/space_square"
         app:layout_constraintVertical_bias="0.8"
         app:srcCompat="@drawable/ic_launcher_background" />
 
@@ -94,11 +107,11 @@
         android:layout_width="5dp"
         android:layout_height="5dp"
         android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="@+id/space"
-        app:layout_constraintEnd_toEndOf="@+id/space"
+        app:layout_constraintBottom_toBottomOf="@+id/space_square"
+        app:layout_constraintEnd_toEndOf="@+id/space_square"
         app:layout_constraintHorizontal_bias="0.81714"
-        app:layout_constraintStart_toStartOf="@id/space"
-        app:layout_constraintTop_toTopOf="@+id/space"
+        app:layout_constraintStart_toStartOf="@+id/space_square"
+        app:layout_constraintTop_toTopOf="@+id/space_square"
         app:layout_constraintVertical_bias="0.4"
         app:srcCompat="@drawable/ic_launcher_background" />
 

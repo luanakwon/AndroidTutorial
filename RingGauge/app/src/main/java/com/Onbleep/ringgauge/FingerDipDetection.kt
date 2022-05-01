@@ -46,6 +46,8 @@ class FingerDipDetection(
     private var pixel2mmCoef: Float
 
     val thicknessList: FloatArray
+    // should always be same with cardDetector.leftMode, check start condition manually
+    var leftMode: Boolean = false
 
 
     init {
@@ -151,6 +153,7 @@ class FingerDipDetection(
             Intent(hostContext,ResultsActivity::class.java).also{
                 it.putExtra("EXTRA_ESTIMATED4THICKNESSES",estimated4Thicknesses)
                 it.putExtra("EXTRA_RGBMATADDR",rgbImg.nativeObjAddr)
+                it.putExtra("EXTRA_LEFTMODE",leftMode)
                 print("Intent also")
                 hostContext.startActivity(it)
             }
