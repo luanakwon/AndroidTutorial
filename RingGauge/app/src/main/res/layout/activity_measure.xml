@@ -65,8 +65,8 @@
 
     <ImageView
         android:id="@+id/cornerTR"
-        android:layout_width="5dp"
-        android:layout_height="5dp"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="@+id/space_square"
         app:layout_constraintEnd_toEndOf="@+id/space_square"
@@ -78,8 +78,8 @@
 
     <ImageView
         android:id="@+id/cornerBL"
-        android:layout_width="5dp"
-        android:layout_height="5dp"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="@+id/space_square"
         app:layout_constraintEnd_toEndOf="@+id/space_square"
@@ -91,8 +91,8 @@
 
     <ImageView
         android:id="@+id/cornerBR"
-        android:layout_width="5dp"
-        android:layout_height="5dp"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="@+id/space_square"
         app:layout_constraintEnd_toEndOf="@+id/space_square"
@@ -104,8 +104,8 @@
 
     <ImageView
         android:id="@+id/cornerTL"
-        android:layout_width="5dp"
-        android:layout_height="5dp"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="@+id/space_square"
         app:layout_constraintEnd_toEndOf="@+id/space_square"
@@ -114,6 +114,169 @@
         app:layout_constraintTop_toTopOf="@+id/space_square"
         app:layout_constraintVertical_bias="0.4"
         app:srcCompat="@drawable/ic_launcher_background" />
+
+    <!-- 16 Relatives below is to indicate process in progress -->
+    <!--TRV1-->
+    <RelativeLayout
+        android:id="@+id/loadingTRV1"
+        android:layout_width="5dp"
+        android:layout_height="10dp"
+        android:background="#4AD0EE"
+        app:layout_constraintBottom_toTopOf="@id/cornerTR"
+        app:layout_constraintStart_toStartOf="@id/cornerTR"
+        app:layout_constraintEnd_toEndOf="@id/cornerTR"
+        android:layout_marginBottom="5dp" />
+    <!--TRV2-->
+    <RelativeLayout
+        android:id="@+id/loadingTRV2"
+        android:layout_width="5dp"
+        android:layout_height="5dp"
+        android:background="#4AD0EE"
+        app:layout_constraintBottom_toTopOf="@id/loadingTRV1"
+        app:layout_constraintStart_toStartOf="@id/cornerTR"
+        app:layout_constraintEnd_toEndOf="@id/cornerTR"
+        android:layout_marginBottom="5dp" />
+    <!--TRH1-->
+    <RelativeLayout
+        android:id="@+id/loadingTRH1"
+        android:layout_width="10dp"
+        android:layout_height="5dp"
+        android:background="#4AD0EE"
+        app:layout_constraintTop_toTopOf="@id/cornerTR"
+        app:layout_constraintBottom_toBottomOf="@id/cornerTR"
+        app:layout_constraintEnd_toStartOf="@id/cornerTR"
+        android:layout_marginEnd="5dp"/>
+    <!--TRH2-->
+    <RelativeLayout
+        android:id="@+id/loadingTRH2"
+        android:layout_width="5dp"
+        android:layout_height="5dp"
+        android:background="#4AD0EE"
+        app:layout_constraintTop_toTopOf="@id/cornerTR"
+        app:layout_constraintBottom_toBottomOf="@id/cornerTR"
+        app:layout_constraintEnd_toStartOf="@id/loadingTRH1"
+        android:layout_marginEnd="5dp" />
+    <!--TLV1-->
+    <RelativeLayout
+        android:id="@+id/loadingTLV1"
+        android:layout_width="5dp"
+        android:layout_height="10dp"
+        android:background="#4AD0EE"
+        app:layout_constraintTop_toBottomOf="@id/cornerTL"
+        app:layout_constraintStart_toStartOf="@id/cornerTL"
+        app:layout_constraintEnd_toEndOf="@id/cornerTL"
+        android:layout_marginTop="5dp" />
+    <!--TLV2-->
+    <RelativeLayout
+        android:id="@+id/loadingTLV2"
+        android:layout_width="5dp"
+        android:layout_height="5dp"
+        android:background="#4AD0EE"
+        app:layout_constraintTop_toBottomOf="@id/loadingTLV1"
+        app:layout_constraintStart_toStartOf="@id/cornerTL"
+        app:layout_constraintEnd_toEndOf="@id/cornerTL"
+        android:layout_marginTop="5dp" />
+    <!--TLH1-->
+    <RelativeLayout
+        android:id="@+id/loadingTLH1"
+        android:layout_width="10dp"
+        android:layout_height="5dp"
+        android:background="#4AD0EE"
+        app:layout_constraintTop_toTopOf="@id/cornerTL"
+        app:layout_constraintBottom_toBottomOf="@id/cornerTL"
+        app:layout_constraintEnd_toStartOf="@id/cornerTL"
+        android:layout_marginEnd="5dp"/>
+    <!--TLH2-->
+    <RelativeLayout
+        android:id="@+id/loadingTLH2"
+        android:layout_width="5dp"
+        android:layout_height="5dp"
+        android:background="#4AD0EE"
+        app:layout_constraintTop_toTopOf="@id/cornerTL"
+        app:layout_constraintBottom_toBottomOf="@id/cornerTL"
+        app:layout_constraintEnd_toStartOf="@id/loadingTLH1"
+        android:layout_marginEnd="5dp" />
+    <!--BLV1-->
+    <RelativeLayout
+        android:id="@+id/loadingBLV1"
+        android:layout_width="5dp"
+        android:layout_height="10dp"
+        android:background="#4AD0EE"
+        app:layout_constraintTop_toBottomOf="@id/cornerBL"
+        app:layout_constraintStart_toStartOf="@id/cornerBL"
+        app:layout_constraintEnd_toEndOf="@id/cornerBL"
+        android:layout_marginTop="5dp" />
+    <!--BLV2-->
+    <RelativeLayout
+        android:id="@+id/loadingBLV2"
+        android:layout_width="5dp"
+        android:layout_height="5dp"
+        android:background="#4AD0EE"
+        app:layout_constraintTop_toBottomOf="@id/loadingBLV1"
+        app:layout_constraintStart_toStartOf="@id/cornerBL"
+        app:layout_constraintEnd_toEndOf="@id/cornerBL"
+        android:layout_marginTop="5dp" />
+    <!--BLH1-->
+    <RelativeLayout
+        android:id="@+id/loadingBLH1"
+        android:layout_width="10dp"
+        android:layout_height="5dp"
+        android:background="#4AD0EE"
+        app:layout_constraintTop_toTopOf="@id/cornerBL"
+        app:layout_constraintBottom_toBottomOf="@id/cornerBL"
+        app:layout_constraintStart_toEndOf="@id/cornerBL"
+        android:layout_marginStart="5dp"/>
+    <!--BLH2-->
+    <RelativeLayout
+        android:id="@+id/loadingBLH2"
+        android:layout_width="5dp"
+        android:layout_height="5dp"
+        android:background="#4AD0EE"
+        app:layout_constraintTop_toTopOf="@id/cornerBL"
+        app:layout_constraintBottom_toBottomOf="@id/cornerBL"
+        app:layout_constraintStart_toEndOf="@id/loadingBLH1"
+        android:layout_marginStart="5dp" />
+    <!--BRV1-->
+    <RelativeLayout
+        android:id="@+id/loadingBRV1"
+        android:layout_width="5dp"
+        android:layout_height="10dp"
+        android:background="#4AD0EE"
+        app:layout_constraintBottom_toTopOf="@id/cornerBR"
+        app:layout_constraintStart_toStartOf="@id/cornerBR"
+        app:layout_constraintEnd_toEndOf="@id/cornerBR"
+        android:layout_marginBottom="5dp" />
+    <!--BRV2-->
+    <RelativeLayout
+        android:id="@+id/loadingBRV2"
+        android:layout_width="5dp"
+        android:layout_height="5dp"
+        android:background="#4AD0EE"
+        app:layout_constraintBottom_toTopOf="@id/loadingBRV1"
+        app:layout_constraintStart_toStartOf="@id/cornerBR"
+        app:layout_constraintEnd_toEndOf="@id/cornerBR"
+        android:layout_marginBottom="5dp" />
+    <!--BRH1-->
+    <RelativeLayout
+        android:id="@+id/loadingBRH1"
+        android:layout_width="10dp"
+        android:layout_height="5dp"
+        android:background="#4AD0EE"
+        app:layout_constraintTop_toTopOf="@id/cornerBR"
+        app:layout_constraintBottom_toBottomOf="@id/cornerBR"
+        app:layout_constraintStart_toEndOf="@id/cornerBR"
+        android:layout_marginStart="5dp"/>
+    <!--BRH2-->
+    <RelativeLayout
+        android:id="@+id/loadingBRH2"
+        android:layout_width="5dp"
+        android:layout_height="5dp"
+        android:background="#4AD0EE"
+        app:layout_constraintTop_toTopOf="@id/cornerBR"
+        app:layout_constraintBottom_toBottomOf="@id/cornerBR"
+        app:layout_constraintStart_toEndOf="@id/loadingBRH1"
+        android:layout_marginStart="5dp" />
+
 
 
     <Button
