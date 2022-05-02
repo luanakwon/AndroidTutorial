@@ -22,6 +22,7 @@ import android.util.Size
 import android.view.*
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
@@ -73,6 +74,8 @@ class MeasureActivity : AppCompatActivity() {
     private lateinit var grImg: Mat
     private lateinit var rgbImg: Mat
     private lateinit var cornerGuides: Array<ImageView>
+    private lateinit var corner1stDots: Array<RelativeLayout>
+    private lateinit var corner2ndDots: Array<RelativeLayout>
     private lateinit var pLayout: ConstraintLayout
 
 
@@ -123,6 +126,18 @@ class MeasureActivity : AppCompatActivity() {
             findViewById(R.id.cornerTR),
             findViewById(R.id.cornerBL),
             findViewById(R.id.cornerBR)
+        )
+        corner1stDots = arrayOf(
+            findViewById(R.id.loadingTLV1), findViewById(R.id.loadingTLH1),
+            findViewById(R.id.loadingTRV1), findViewById(R.id.loadingTRH1),
+            findViewById(R.id.loadingBLV1), findViewById(R.id.loadingBLH1),
+            findViewById(R.id.loadingBRV1), findViewById(R.id.loadingBRH1)
+        )
+        corner2ndDots = arrayOf(
+            findViewById(R.id.loadingTLV2), findViewById(R.id.loadingTLH2),
+            findViewById(R.id.loadingTRV2), findViewById(R.id.loadingTRH2),
+            findViewById(R.id.loadingBLV2), findViewById(R.id.loadingBLH2),
+            findViewById(R.id.loadingBRV2), findViewById(R.id.loadingBRH2)
         )
         pLayout = findViewById(R.id.parentCTLayout)
 
@@ -474,15 +489,27 @@ class MeasureActivity : AppCompatActivity() {
             } else {successfulCardDetectionCounter = 0}
 
             Log.i(TAG, "Successful detections $successfulCardDetectionCounter")
-            //TODO change corner guide opacity to indicate (un)successful detection
+            // change corner guide opacity to indicate (un)successful detection
             val cornerOpacity = if (successfulCardDetectionCounter == 0) 0.5f else 1f
             for (item in cornerGuides) {
                 item.alpha = cornerOpacity
             }
+            // change additional dots to indicate detection-in-progress
+            if (successfulCardDetectionCounter < 2) {
+                corner1stDots.forEach { it.visibility = View.INVISIBLE }
+                corner2ndDots.forEach { it.visibility = View.INVISIBLE }
+            } else if (successfulCardDetectionCounter == 2){
+                corner1stDots.forEach { it.visibility = View.VISIBLE }
+                corner2ndDots.forEach { it.visibility = View.INVISIBLE }
+            } else if (successfulCardDetectionCounter == 3){
+                corner1stDots.forEach { it.visibility = View.VISIBLE }
+                corner2ndDots.forEach { it.visibility = View.VISIBLE }
+            }
+
 
 
             // if had enough successful card Detection, use last picture to do hand detection
-            if (successfulCardDetectionCounter > requiredSuccessfulCardDetection) {
+            if (successfulCardDetectionCounter >= requiredSuccessfulCardDetection) {
                 val cornersDstMat = Mat(4, 2, CvType.CV_32FC1)
                 for (i in 0..3) {
                     cornersDstMat.put(i, 0, cornersDst[i].x)

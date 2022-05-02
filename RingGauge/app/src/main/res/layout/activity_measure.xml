@@ -74,7 +74,9 @@
         app:layout_constraintStart_toStartOf="@+id/space_square"
         app:layout_constraintTop_toTopOf="@+id/space_square"
         app:layout_constraintVertical_bias="0.8"
-        app:srcCompat="@drawable/ic_launcher_background" />
+        app:srcCompat="@drawable/ic_card_corner"
+        app:tint="@color/lightBlue"
+        android:rotation="180"/>
 
     <ImageView
         android:id="@+id/cornerBL"
@@ -87,7 +89,8 @@
         app:layout_constraintStart_toStartOf="@id/space_square"
         app:layout_constraintTop_toTopOf="@+id/space_square"
         app:layout_constraintVertical_bias="0.4"
-        app:srcCompat="@drawable/ic_launcher_background" />
+        app:srcCompat="@drawable/ic_card_corner"
+        app:tint="@color/lightBlue"/>
 
     <ImageView
         android:id="@+id/cornerBR"
@@ -100,7 +103,9 @@
         app:layout_constraintStart_toStartOf="@id/space_square"
         app:layout_constraintTop_toTopOf="@+id/space_square"
         app:layout_constraintVertical_bias="0.8"
-        app:srcCompat="@drawable/ic_launcher_background" />
+        app:srcCompat="@drawable/ic_card_corner"
+        android:rotation="270"
+        app:tint="@color/lightBlue"/>
 
     <ImageView
         android:id="@+id/cornerTL"
@@ -113,7 +118,9 @@
         app:layout_constraintStart_toStartOf="@+id/space_square"
         app:layout_constraintTop_toTopOf="@+id/space_square"
         app:layout_constraintVertical_bias="0.4"
-        app:srcCompat="@drawable/ic_launcher_background" />
+        app:srcCompat="@drawable/ic_card_corner"
+        android:rotation="90"
+        app:tint="@color/lightBlue"/>
 
     <!-- 16 Relatives below is to indicate process in progress -->
     <!--TRV1-->
