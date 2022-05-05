@@ -132,7 +132,8 @@
         app:layout_constraintBottom_toTopOf="@id/cornerTR"
         app:layout_constraintStart_toStartOf="@id/cornerTR"
         app:layout_constraintEnd_toEndOf="@id/cornerTR"
-        android:layout_marginBottom="5dp" />
+        android:layout_marginBottom="5dp"
+        android:visibility="invisible"/>
     <!--TRV2-->
     <RelativeLayout
         android:id="@+id/loadingTRV2"
@@ -142,7 +143,8 @@
         app:layout_constraintBottom_toTopOf="@id/loadingTRV1"
         app:layout_constraintStart_toStartOf="@id/cornerTR"
         app:layout_constraintEnd_toEndOf="@id/cornerTR"
-        android:layout_marginBottom="5dp" />
+        android:layout_marginBottom="5dp"
+        android:visibility="invisible" />
     <!--TRH1-->
     <RelativeLayout
         android:id="@+id/loadingTRH1"
@@ -152,7 +154,8 @@
         app:layout_constraintTop_toTopOf="@id/cornerTR"
         app:layout_constraintBottom_toBottomOf="@id/cornerTR"
         app:layout_constraintEnd_toStartOf="@id/cornerTR"
-        android:layout_marginEnd="5dp"/>
+        android:layout_marginEnd="5dp"
+        android:visibility="invisible"/>
     <!--TRH2-->
     <RelativeLayout
         android:id="@+id/loadingTRH2"
@@ -162,7 +165,8 @@
         app:layout_constraintTop_toTopOf="@id/cornerTR"
         app:layout_constraintBottom_toBottomOf="@id/cornerTR"
         app:layout_constraintEnd_toStartOf="@id/loadingTRH1"
-        android:layout_marginEnd="5dp" />
+        android:layout_marginEnd="5dp"
+        android:visibility="invisible" />
     <!--TLV1-->
     <RelativeLayout
         android:id="@+id/loadingTLV1"
@@ -172,7 +176,8 @@
         app:layout_constraintTop_toBottomOf="@id/cornerTL"
         app:layout_constraintStart_toStartOf="@id/cornerTL"
         app:layout_constraintEnd_toEndOf="@id/cornerTL"
-        android:layout_marginTop="5dp" />
+        android:layout_marginTop="5dp"
+        android:visibility="invisible" />
     <!--TLV2-->
     <RelativeLayout
         android:id="@+id/loadingTLV2"
@@ -182,7 +187,8 @@
         app:layout_constraintTop_toBottomOf="@id/loadingTLV1"
         app:layout_constraintStart_toStartOf="@id/cornerTL"
         app:layout_constraintEnd_toEndOf="@id/cornerTL"
-        android:layout_marginTop="5dp" />
+        android:layout_marginTop="5dp"
+        android:visibility="invisible" />
     <!--TLH1-->
     <RelativeLayout
         android:id="@+id/loadingTLH1"
@@ -192,7 +198,8 @@
         app:layout_constraintTop_toTopOf="@id/cornerTL"
         app:layout_constraintBottom_toBottomOf="@id/cornerTL"
         app:layout_constraintEnd_toStartOf="@id/cornerTL"
-        android:layout_marginEnd="5dp"/>
+        android:layout_marginEnd="5dp"
+        android:visibility="invisible"/>
     <!--TLH2-->
     <RelativeLayout
         android:id="@+id/loadingTLH2"
@@ -202,7 +209,8 @@
         app:layout_constraintTop_toTopOf="@id/cornerTL"
         app:layout_constraintBottom_toBottomOf="@id/cornerTL"
         app:layout_constraintEnd_toStartOf="@id/loadingTLH1"
-        android:layout_marginEnd="5dp" />
+        android:layout_marginEnd="5dp"
+        android:visibility="invisible" />
     <!--BLV1-->
     <RelativeLayout
         android:id="@+id/loadingBLV1"
@@ -212,7 +220,8 @@
         app:layout_constraintTop_toBottomOf="@id/cornerBL"
         app:layout_constraintStart_toStartOf="@id/cornerBL"
         app:layout_constraintEnd_toEndOf="@id/cornerBL"
-        android:layout_marginTop="5dp" />
+        android:layout_marginTop="5dp"
+        android:visibility="invisible" />
     <!--BLV2-->
     <RelativeLayout
         android:id="@+id/loadingBLV2"
@@ -222,7 +231,8 @@
         app:layout_constraintTop_toBottomOf="@id/loadingBLV1"
         app:layout_constraintStart_toStartOf="@id/cornerBL"
         app:layout_constraintEnd_toEndOf="@id/cornerBL"
-        android:layout_marginTop="5dp" />
+        android:layout_marginTop="5dp"
+        android:visibility="invisible" />
     <!--BLH1-->
     <RelativeLayout
         android:id="@+id/loadingBLH1"
@@ -232,7 +242,8 @@
         app:layout_constraintTop_toTopOf="@id/cornerBL"
         app:layout_constraintBottom_toBottomOf="@id/cornerBL"
         app:layout_constraintStart_toEndOf="@id/cornerBL"
-        android:layout_marginStart="5dp"/>
+        android:layout_marginStart="5dp"
+        android:visibility="invisible"/>
     <!--BLH2-->
     <RelativeLayout
         android:id="@+id/loadingBLH2"
@@ -242,7 +253,8 @@
         app:layout_constraintTop_toTopOf="@id/cornerBL"
         app:layout_constraintBottom_toBottomOf="@id/cornerBL"
         app:layout_constraintStart_toEndOf="@id/loadingBLH1"
-        android:layout_marginStart="5dp" />
+        android:layout_marginStart="5dp"
+        android:visibility="invisible" />
     <!--BRV1-->
     <RelativeLayout
         android:id="@+id/loadingBRV1"
@@ -252,7 +264,8 @@
         app:layout_constraintBottom_toTopOf="@id/cornerBR"
         app:layout_constraintStart_toStartOf="@id/cornerBR"
         app:layout_constraintEnd_toEndOf="@id/cornerBR"
-        android:layout_marginBottom="5dp" />
+        android:layout_marginBottom="5dp"
+        android:visibility="invisible" />
     <!--BRV2-->
     <RelativeLayout
         android:id="@+id/loadingBRV2"
@@ -262,7 +275,8 @@
         app:layout_constraintBottom_toTopOf="@id/loadingBRV1"
         app:layout_constraintStart_toStartOf="@id/cornerBR"
         app:layout_constraintEnd_toEndOf="@id/cornerBR"
-        android:layout_marginBottom="5dp" />
+        android:layout_marginBottom="5dp"
+        android:visibility="invisible" />
     <!--BRH1-->
     <RelativeLayout
         android:id="@+id/loadingBRH1"
@@ -272,7 +286,8 @@
         app:layout_constraintTop_toTopOf="@id/cornerBR"
         app:layout_constraintBottom_toBottomOf="@id/cornerBR"
         app:layout_constraintStart_toEndOf="@id/cornerBR"
-        android:layout_marginStart="5dp"/>
+        android:layout_marginStart="5dp"
+        android:visibility="invisible"/>
     <!--BRH2-->
     <RelativeLayout
         android:id="@+id/loadingBRH2"
@@ -282,8 +297,8 @@
         app:layout_constraintTop_toTopOf="@id/cornerBR"
         app:layout_constraintBottom_toBottomOf="@id/cornerBR"
         app:layout_constraintStart_toEndOf="@id/loadingBRH1"
-        android:layout_marginStart="5dp" />
-
+        android:layout_marginStart="5dp"
+        android:visibility="invisible" />
 
 
     <Button

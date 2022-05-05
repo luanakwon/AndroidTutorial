@@ -472,17 +472,17 @@ class MeasureActivity : AppCompatActivity() {
 
             val pointsFound = cardDetector.runDetection(grImg,cornersDst)
             Log.i(TAG, "Points found = $pointsFound")
-            Log.i(TAG, "rst0: ${cornersDst[0].x}, ${cornersDst[0].y}")
-            Log.i(TAG, "rst1: ${cornersDst[1].x}, ${cornersDst[1].y}")
+            //Log.i(TAG, "rst0: ${cornersDst[0].x}, ${cornersDst[0].y}")
+            //Log.i(TAG, "rst1: ${cornersDst[1].x}, ${cornersDst[1].y}")
 //            Log.i(TAG, "rst2: ${cornersDst[2].x}, ${cornersDst[2].y}")
 //            Log.i(TAG, "rst3: ${cornersDst[3].x}, ${cornersDst[3].y}")
 
             if (pointsFound){
                 // steadiness threshold
                 val newNormalizedArea = cardDetector.getDetectedAreaApprox()/cardDetector.getCardGuideArea()
-                Log.i(TAG, "last norm area : $lastNormalizedArea")
+                //Log.i(TAG, "last norm area : $lastNormalizedArea")
                 if (abs(lastNormalizedArea - newNormalizedArea) < 0.1 ){
-                    Log.i(TAG, "new normalized area $newNormalizedArea")
+                    //Log.i(TAG, "new normalized area $newNormalizedArea")
                     successfulCardDetectionCounter+=1
                 } else {successfulCardDetectionCounter = 0}
                 lastNormalizedArea = newNormalizedArea
@@ -490,20 +490,13 @@ class MeasureActivity : AppCompatActivity() {
 
             Log.i(TAG, "Successful detections $successfulCardDetectionCounter")
             // change corner guide opacity to indicate (un)successful detection
-            val cornerOpacity = if (successfulCardDetectionCounter == 0) 0.5f else 1f
-            for (item in cornerGuides) {
-                item.alpha = cornerOpacity
-            }
             // change additional dots to indicate detection-in-progress
-            if (successfulCardDetectionCounter < 2) {
-                corner1stDots.forEach { it.visibility = View.INVISIBLE }
-                corner2ndDots.forEach { it.visibility = View.INVISIBLE }
-            } else if (successfulCardDetectionCounter == 2){
-                corner1stDots.forEach { it.visibility = View.VISIBLE }
-                corner2ndDots.forEach { it.visibility = View.INVISIBLE }
-            } else if (successfulCardDetectionCounter == 3){
-                corner1stDots.forEach { it.visibility = View.VISIBLE }
-                corner2ndDots.forEach { it.visibility = View.VISIBLE }
+            runOnUiThread {
+                cornerGuides.forEach{ it.alpha = if (successfulCardDetectionCounter <= 0) 0.3f else 1f }
+                corner1stDots.forEach{ it.visibility =
+                    if (successfulCardDetectionCounter <= 1) View.INVISIBLE else View.VISIBLE }
+                corner2ndDots.forEach{ it.visibility =
+                    if (successfulCardDetectionCounter <= 2) View.INVISIBLE else View.VISIBLE }
             }
 
 

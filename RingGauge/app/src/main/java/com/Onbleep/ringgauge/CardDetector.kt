@@ -23,6 +23,7 @@ class CardDetector(center_l: D1Array<Int>, center_r: D1Array<Int>, short_p: D1Ar
     val M_in2out_l: Mat
     val M_out2in_r: Mat
     val M_out2in_l: Mat
+    val mat_d_sum: Mat
     // reusable Mat for performance
     private var ld : Int
     private var ld2 : Int
@@ -130,14 +131,56 @@ class CardDetector(center_l: D1Array<Int>, center_r: D1Array<Int>, short_p: D1Ar
         val height = pedge_s.size().height.toInt()
         val width = pedge_s.size().width.toInt()
 
-        Core.gemm(xv,rb_lb,width.toDouble(),dummy,0.0,mat_d)
+//        for (i in 0 until 7225){
+//            if (i%200==0) println()
+//            print("${(rb_lb[0,i][0]).toInt()} ")
+//        }
+//        println()
+        Core.gemm(xv,rb_lb,1/width.toDouble(),dummy,0.0,mat_d)
         Core.gemm(ones_hw,lb,1.0,mat_d,1.0,mat_d)
         Core.gemm(yv,ones_hh,-1.0,mat_d,1.0,mat_d)
 
         Core.absdiff(mat_d,Scalar(0.0),mat_d)
         Core.add(mat_d, Scalar(height/8.0),mat_d)
-        Core.divide(height/8.0,mat_d,mat_d)
+        Core.divide(height/4.0,mat_d,mat_d)
 
+        mat_d_sum = Mat(1,pedge_s.height()*pedge_s.height(),mat_d.type())
+        val ones_1hw = Mat.ones(1,pedge_s.height()*pedge_s.width(),mat_d.type())
+        Core.gemm(ones_1hw,mat_d,1.0,dummy,0.0,mat_d_sum)
+
+//        for (i in 0 until 7225){
+//            if (i%500 == 0){
+//                println()
+//            }
+//            print("${(mat_d_sum[0,i][0]).toInt()} ")
+//        }
+//        println()
+
+
+//        for (i in 0 until 7225){
+//            var vertSum = 0f
+//            for (j in 0 until 850){
+//                vertSum += mat_d[j,i][0].toFloat()
+//            }
+//            print("$vertSum ")
+//            if (i % 100 == 0){
+//                println()
+//            }
+//        }
+//        println()
+
+        //println(mat_d.size())
+//        for (j in 0..35){
+//            println()
+//            for(i in 0 until 850){
+//                if (i%85 ==0) println()
+//                print("${(mat_d[i,j*2][0]*1000).toInt()} ")
+//            }
+//            println()
+//        }
+//
+//        println(pedge_s.size())
+        //assert(value = false)
         detectedCardAreaApprox = 0f
     }
 
@@ -166,17 +209,28 @@ class CardDetector(center_l: D1Array<Int>, center_r: D1Array<Int>, short_p: D1Ar
             mat_d,1.0,
             dummy,0.0,
             scores)
+        Core.divide(scores,mat_d_sum,scores)
 
         val mmlr = Core.minMaxLoc(scores)
         val meanVal = Core.mean(scores).`val`[0]
         Core.mean(scores)
-        Log.i("CDD/linalg", "mx/(0.5mn+0.5mean) ${mmlr.maxVal/(mmlr.minVal*0.9 + meanVal*0.1)}")
-        println("graph data: ")
+        Log.i("CDD/linalg", "${mmlr.maxVal*1000}  ${mmlr.maxVal/(mmlr.minVal*0.9 + meanVal*0.1)}")
+//        println("graph data: ")
 //        for (i in 0..7224){
-//            print("${scores[0,i][0]} ")
+//            if (i%500==0) {println()}
+//            print("${(scores[0,i][0]*1000).toInt()} ")
 //        }
-        println("graph data done")
-        return if(mmlr.maxVal < 10*(mmlr.minVal*0.9 + meanVal*0.1)){
+//        for (i in 0 until 85){
+//            println()
+//            for (j in 0 until 10){
+//                print("${(weighted_img[i,j][0]*100).toInt()} ")
+//            }
+//        }
+//        println()
+//        println("=========")
+//        println("graph data done")
+        //println("${mmlr.maxLoc.x.toInt()%height} ${mmlr.maxLoc.x.toInt()/height} ")
+        return if(mmlr.maxVal < 0.55){
             Pair(0,0)
         } else {
             Pair(mmlr.maxLoc.x.toInt()%height,mmlr.maxLoc.x.toInt()/height)
@@ -198,7 +252,7 @@ class CardDetector(center_l: D1Array<Int>, center_r: D1Array<Int>, short_p: D1Ar
     fun runDetection(grimg: Mat, corners_dst: Array<Point>): Boolean {
         Log.i("CDD","thres : $linRegThresConst")
 
-        println("grimg wh${grimg.width()}, ${grimg.height()}")
+        //println("grimg wh${grimg.width()}, ${grimg.height()}")
 
         if (leftMode){
             Imgproc.warpPerspective(
@@ -209,32 +263,45 @@ class CardDetector(center_l: D1Array<Int>, center_r: D1Array<Int>, short_p: D1Ar
                 grimg, dst, M_in2out_r, Size(long_d.toDouble(),short_d.toDouble()), Imgproc.INTER_LINEAR
             )
         }
-        println("dst wh ${dst.width()}, ${dst.height()}")
+        //println("dst wh ${dst.width()}, ${dst.height()}")
 
         getPossibleEdge()
 
-        println("B: ${peTBLR[1].width()}, ${peTBLR[1].height()}")
+        //println("B: ${peTBLR[1].width()}, ${peTBLR[1].height()}")
 
         val pt8 = mk.zeros<Int>(4,4)
         peTBLR.forEachIndexed{i, _pedge ->
             // first two is long edge, second two is short edge. But they have same shape now
             val pedge = pedge_s
+
+//            _pedge.put(0,0,250.0)
+//            _pedge.put(0,1,5.0)
+//            //var mm = Core.minMaxLoc(_pedge)
+//            //Log.i("CDD/linalg", "pedge min ${mm.minVal} <= 5 max ${mm.maxVal} >= 250")
+//            Core.normalize(_pedge,pedge,0.0,1.0,Core.NORM_MINMAX,CvType.CV_32F)//TODO improve
+//            //mm = Core.minMaxLoc(pedge)
+//            //Log.i("CDD/linalg", "mnx norm min ${mm.minVal} == 0 max ${mm.maxVal} == 1")
+//
+//            Imgproc.Scharr(pedge,pedge,-1,0,1)
+//            //mm = Core.minMaxLoc(pedge)
+//            //Log.i("CDD/linalg", "scharr min ${mm.minVal} max ${mm.maxVal}")
+//            Core.pow(pedge,2.0,pedge)
+//            //mm = Core.minMaxLoc(pedge)
+//            //Log.i("CDD/linalg", "pedge  pow min ${mm.minVal} max ${mm.maxVal}")
+//            //mm = Core.minMaxLoc(pedge_s)
+//            //Log.i("CDD/linalg", "pedges pow min ${mm.minVal} max ${mm.maxVal}")
+
+            //TODO improve
+            val _pedge_p1 = _pedge[0,0][0]
+            val _pedge_p2 = _pedge[0,1][0]
             _pedge.put(0,0,250.0)
             _pedge.put(0,1,5.0)
-            //var mm = Core.minMaxLoc(_pedge)
-            //Log.i("CDD/linalg", "pedge min ${mm.minVal} <= 5 max ${mm.maxVal} >= 250")
-            Core.normalize(_pedge,pedge,0.0,1.0,Core.NORM_MINMAX,CvType.CV_32F)//TODO improve
-            //mm = Core.minMaxLoc(pedge)
-            //Log.i("CDD/linalg", "mnx norm min ${mm.minVal} == 0 max ${mm.maxVal} == 1")
-
+            val mmv = Core.minMaxLoc(_pedge)
+            Core.normalize(_pedge,pedge,0.0,1.0,Core.NORM_MINMAX,CvType.CV_32F)
+            pedge.put(0,0,(_pedge_p1-mmv.minVal)/mmv.maxVal)
+            pedge.put(0,1,(_pedge_p2-mmv.minVal)/mmv.maxVal)
             Imgproc.Scharr(pedge,pedge,-1,0,1)
-            //mm = Core.minMaxLoc(pedge)
-            //Log.i("CDD/linalg", "scharr min ${mm.minVal} max ${mm.maxVal}")
             Core.pow(pedge,2.0,pedge)
-            //mm = Core.minMaxLoc(pedge)
-            //Log.i("CDD/linalg", "pedge  pow min ${mm.minVal} max ${mm.maxVal}")
-            //mm = Core.minMaxLoc(pedge_s)
-            //Log.i("CDD/linalg", "pedges pow min ${mm.minVal} max ${mm.maxVal}")
 
 
 

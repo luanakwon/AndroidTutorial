@@ -23,10 +23,12 @@ class MagicWand(s:Size) {
         boolImg8U = Mat(s,CvType.CV_8UC1)
     }
 
-    /** dst size == img size, dst type 16SC1 */
+    /** dst size == img size, dst type 16SC1
+     * tol in percent */
     fun applyWand(img: Mat, point:IntArray, tol: Int, dst:Mat){
         val c0: DoubleArray = img[point[0],point[1]]
         img.convertTo(intImg,CvType.CV_16SC3)
+        // pixel & channel wise difference with pivot color
         Core.subtract(intImg,Scalar(c0),intImg)
 
         val channels = ArrayList<Mat>()
@@ -47,8 +49,8 @@ class MagicWand(s:Size) {
         // maxImg - minImg
         Core.subtract(maxImg,channels[0],maxImg)
         val mml = Core.minMaxLoc(maxImg)
-        Log.i("MagicWand", "maxImg-minImg min: ${mml.minVal}, max: ${mml.maxVal}, tol: $tol")
-        Core.compare(maxImg, Scalar(tol.toDouble()), boolImg8U, Core.CMP_LT) // true=255 false=0
+        Log.i("MagicWand", "maxImg-minImg min: ${mml.minVal}, max: ${mml.maxVal}, tol: ${tol.toDouble()*mml.maxVal/100}")
+        Core.compare(maxImg, Scalar(tol.toDouble()*mml.maxVal/100), boolImg8U, Core.CMP_LT) // true=255 false=0
         Core.divide(boolImg8U, Scalar(255.0),dst,1.0,CvType.CV_16SC1)
     }
 
