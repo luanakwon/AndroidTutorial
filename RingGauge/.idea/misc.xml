@@ -4,13 +4,18 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Users/junny/AndroidStudioProjects/HelloWorld/RingGauge/app/src/main/res/drawable-anydpi/ic_card_corner.xml" value="0.378125" />
+        <entry key="..\:/Users/junny/AndroidStudioProjects/HelloWorld/RingGauge/app/src/main/res/drawable-anydpi/replay.xml" value="0.378125" />
+        <entry key="..\:/Users/junny/AndroidStudioProjects/HelloWorld/RingGauge/app/src/main/res/drawable/ic_baseline_camera_alt_24.xml" value="0.378125" />
         <entry key="..\:/Users/junny/AndroidStudioProjects/HelloWorld/RingGauge/app/src/main/res/drawable/ic_baseline_replay_24.xml" value="0.378125" />
         <entry key="..\:/Users/junny/AndroidStudioProjects/HelloWorld/RingGauge/app/src/main/res/drawable/ic_launcher_background.xml" value="0.2046875" />
+        <entry key="..\:/Users/junny/AndroidStudioProjects/HelloWorld/RingGauge/app/src/main/res/drawable/ic_onbleep.xml" value="0.3509259259259259" />
+        <entry key="..\:/Users/junny/AndroidStudioProjects/HelloWorld/RingGauge/app/src/main/res/drawable/rcrectangle2.xml" value="0.378125" />
+        <entry key="..\:/Users/junny/AndroidStudioProjects/HelloWorld/RingGauge/app/src/main/res/layout/activity_first.xml" value="0.25" />
         <entry key="..\:/Users/junny/AndroidStudioProjects/HelloWorld/RingGauge/app/src/main/res/layout/activity_how_to.xml" value="0.18697916666666667" />
-        <entry key="..\:/Users/junny/AndroidStudioProjects/HelloWorld/RingGauge/app/src/main/res/layout/activity_inform_permission.xml" value="0.1" />
+        <entry key="..\:/Users/junny/AndroidStudioProjects/HelloWorld/RingGauge/app/src/main/res/layout/activity_inform_permission.xml" value="0.25" />
         <entry key="..\:/Users/junny/AndroidStudioProjects/HelloWorld/RingGauge/app/src/main/res/layout/activity_main.xml" value="0.21784420289855072" />
         <entry key="..\:/Users/junny/AndroidStudioProjects/HelloWorld/RingGauge/app/src/main/res/layout/activity_measure.xml" value="0.18" />
-        <entry key="..\:/Users/junny/AndroidStudioProjects/HelloWorld/RingGauge/app/src/main/res/layout/activity_results.xml" value="0.2" />
+        <entry key="..\:/Users/junny/AndroidStudioProjects/HelloWorld/RingGauge/app/src/main/res/layout/activity_results.xml" value="0.5" />
         <entry key="..\:/Users/junny/AndroidStudioProjects/HelloWorld/RingGauge/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.2046875" />
         <entry key="..\:/Users/junny/AndroidStudioProjects/HelloWorld/RingGauge/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.38229166666666664" />
       </map>

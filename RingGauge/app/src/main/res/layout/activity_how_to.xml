@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".HowToActivity">
+    tools:context=".HowToActivity"
+    android:background="@color/darkBlue">
 
     <VideoView
         android:id="@+id/videoView"
@@ -20,7 +21,8 @@
         android:layout_alignParentBottom="true"
         android:layout_marginEnd="15dp"
         android:layout_marginBottom="8dp"
-        android:text="Skip" />
+        android:text="Skip"
+        android:backgroundTint="@color/lightBlue"/>
 
     <ImageButton
         android:id="@+id/replayBtn"
