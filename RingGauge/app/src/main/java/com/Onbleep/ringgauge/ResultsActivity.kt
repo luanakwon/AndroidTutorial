@@ -14,6 +14,10 @@ import org.opencv.android.Utils
 import org.opencv.core.Mat
 
 class ResultsActivity : AppCompatActivity() {
+
+    private lateinit var toggleButtons: Array<ToggleButton>
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_results)
@@ -22,6 +26,13 @@ class ResultsActivity : AppCompatActivity() {
             ?: floatArrayOf(0f,0f,0f,0f)
         val matAddr = intent.getLongExtra("EXTRA_RGBMATADDR",0L)
         val leftMode = intent.getBooleanExtra("EXTRA_LEFTMODE",false)
+        toggleButtons = arrayOf(
+            findViewById(R.id.button1),
+            findViewById(R.id.button2),
+            findViewById(R.id.button3),
+            findViewById(R.id.button4)
+        )
+
 
         println("MAIN2")
 
@@ -33,10 +44,11 @@ class ResultsActivity : AppCompatActivity() {
             findViewById<ImageView>(R.id.pictureResult).setImageBitmap(bitmapImg)
         } else {println("no image addr")}
 
-        findViewById<ToggleButton>(R.id.button1).textOn = "${getKSUnit(thicknesses[0])} 호"
-        findViewById<ToggleButton>(R.id.button2).textOn = "${getKSUnit(thicknesses[1])} 호"
-        findViewById<ToggleButton>(R.id.button3).textOn = "${getKSUnit(thicknesses[2])} 호"
-        findViewById<ToggleButton>(R.id.button4).textOn = "${getKSUnit(thicknesses[3])} 호"
+        toggleButtons.forEachIndexed { i, toggleButton ->
+            toggleButton.textOn = "${getKSUnit((thicknesses[i]))}호"
+            toggleButton.setOnClickListener { toggleSwitch(i) }
+        }
+        toggleButtons[0].toggle()
 
         val resultsTable: LinearLayout = findViewById(R.id.resultsTable)
         val closeTableBtn: ImageView = findViewById(R.id.closeTableBtn)
@@ -74,6 +86,12 @@ class ResultsActivity : AppCompatActivity() {
 
     fun getKSUnit(x: Float) : Int{
         return ((x-13f)*3 + 1.5).toInt()
+    }
+
+    fun toggleSwitch(i: Int){
+        toggleButtons.forEachIndexed{ idx, toggleButton ->
+            if (i != idx) toggleButton.isChecked = false
+        }
     }
 
     var mBackWait: Long = 0

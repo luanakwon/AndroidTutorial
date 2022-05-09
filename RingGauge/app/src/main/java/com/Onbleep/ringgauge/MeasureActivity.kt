@@ -492,7 +492,7 @@ class MeasureActivity : AppCompatActivity() {
             // change corner guide opacity to indicate (un)successful detection
             // change additional dots to indicate detection-in-progress
             runOnUiThread {
-                cornerGuides.forEach{ it.alpha = if (successfulCardDetectionCounter <= 0) 0.3f else 1f }
+                cornerGuides.forEach{ it.alpha = if (successfulCardDetectionCounter <= 0) 0.6f else 1f }
                 corner1stDots.forEach{ it.visibility =
                     if (successfulCardDetectionCounter <= 1) View.INVISIBLE else View.VISIBLE }
                 corner2ndDots.forEach{ it.visibility =

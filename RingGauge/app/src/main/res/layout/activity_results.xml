@@ -31,7 +31,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/ic_menu_up"
-        app:tint="@color/lightBlue" />
+        app:tint="@color/lightBlue"
+        android:visibility="invisible"/>
 
     <LinearLayout
         android:id="@+id/resultsTable"
