@@ -29,16 +29,12 @@
 
         <ImageView
             android:id="@+id/logoImageView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_launcher_foreground"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Onbleep"
-            android:textColor="@color/white"
-            android:textAlignment="center"
-            android:textSize="50sp"/>
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:src="@drawable/ic_logo_onbleep"
+            android:scaleType="centerInside"
+            app:tint="@color/white" />
+
 
 
     </LinearLayout>
