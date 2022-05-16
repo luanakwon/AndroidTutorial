@@ -16,3 +16,5 @@ local.properties
 /OpenCVinAndroid/emptytemp/
 /MyKotlin/opencv/
 /RingGauge/sdk
+RingGauge/RingGaugeReleaseTest01.jks
+RingGauge/app/release/app-release.apk

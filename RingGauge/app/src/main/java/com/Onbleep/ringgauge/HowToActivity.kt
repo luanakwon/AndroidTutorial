@@ -20,7 +20,7 @@ class HowToActivity : AppCompatActivity() {
         val skipButton: Button = findViewById(R.id.skipBtn)
         val replayButton: ImageButton = findViewById(R.id.replayBtn)
         val changeTextHandler = Handler(Looper.getMainLooper())
-        val videoLengthInMillis: Long = 30000 // 30s
+        val videoLengthInMillis: Long = 45000 // 30s
         // TODO: change video
         v.setVideoPath("android.resource://${packageName}/${R.raw.how_to_0507}")
         v.start()
