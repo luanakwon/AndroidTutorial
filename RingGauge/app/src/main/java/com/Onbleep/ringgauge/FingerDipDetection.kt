@@ -138,7 +138,7 @@ class FingerDipDetection(
                 var cnt = 0
                 var cleanMean = 0f
                 for(i in dstY){
-                    if (pixel2mmCoef*i > 10){
+                    if (pixel2mmCoef*i >= 13){
                         cnt += 1
                         cleanMean += i
                     }
@@ -146,7 +146,7 @@ class FingerDipDetection(
 //                cleanMean = if (cnt != 0) cleanMean/cnt else 0f
 //                estimated4Thicknesses[index] = 0.5f*pixel2mmCoef*dstY.maxOf { it } + 0.5f*cleanMean// max
                 estimated4Thicknesses[index] = if (cnt != 0){
-                    pixel2mmCoef*(0.2f*dstY.maxOf { it } + 0.8f*cleanMean/cnt)
+                    pixel2mmCoef*(0.1f*dstY.maxOf { it } + 0.9f*cleanMean/cnt)
                 } else { // finger less then 10mm (smallest ring size is 13mm)
                     10f
                 }

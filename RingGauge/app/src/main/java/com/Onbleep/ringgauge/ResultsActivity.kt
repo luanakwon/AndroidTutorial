@@ -84,8 +84,8 @@ class ResultsActivity : AppCompatActivity() {
         set.applyTo(pLayout)
     }
 
-    fun getKSUnit(x: Float) : Int{
-        return ((x-13f)*3 + 1.5).toInt()
+    fun getKSUnit(x_mm: Float) : Int{
+        return ((x_mm-13f)*3 + 1.5).toInt() - 2 // sneaky adjustment
     }
 
     fun toggleSwitch(i: Int){
